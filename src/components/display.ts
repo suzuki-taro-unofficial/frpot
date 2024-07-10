@@ -6,7 +6,6 @@ export class Display implements ViewItem<HTMLDivElement> {
 
   constructor(c_content: Cell<string>) {
     this.display = document.createElement("div");
-    this.display.textContent = "";
 
     Operational.value(c_content).listen((content) => {
       this.display.textContent = content;

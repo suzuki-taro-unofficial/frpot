@@ -1,4 +1,5 @@
 import { app } from "./app";
 import "./style.css";
 
-app(document.querySelector<HTMLDivElement>("#app")!);
+const root = app();
+root.render(document.querySelector<HTMLDivElement>("#app")!);
