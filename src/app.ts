@@ -2,19 +2,20 @@ import { Box } from "./components/box";
 import Button from "./components/button";
 import { Meter } from "./components/meter";
 import { ViewItem } from "./components/viewItem";
+import { Timer } from "./timer";
 
 export const app = (): ViewItem => {
-  const countUpButton = new Button("Count up");
-  const countDownButton = new Button("Count down");
+  const addMinuteButton = new Button("+1 Minute");
+  const s_add_minute = addMinuteButton.s_clicked.map(() => 60);
 
-  const s_minus = countUpButton.s_clicked.map(() => 1);
-  const s_plus = countDownButton.s_clicked.map(() => -1);
-  const s_delta = s_minus.orElse(s_plus);
+  const timer = new Timer(s_add_minute);
 
-  const count = s_delta.accum(0, (a, b) => a + b);
+  timer.s_finished.listen(() => {
+    alert("timer is finished!");
+  });
 
-  const buttons = new Box().appendChildren(countUpButton, countDownButton);
-  const meter = new Meter(count);
+  const buttons = new Box().appendChildren(addMinuteButton);
+  const meter = new Meter(timer.c_seconds);
   const root = new Box().appendChildren(meter, buttons);
 
   return root;
