@@ -1,4 +1,4 @@
-import { Cell, Operational } from "sodiumjs";
+import { Cell, Operational, Transaction } from "sodiumjs";
 import { ViewItem } from "./viewItem";
 
 export class Lamp implements ViewItem<HTMLDivElement> {
@@ -7,17 +7,19 @@ export class Lamp implements ViewItem<HTMLDivElement> {
   constructor(c_isOn: Cell<boolean>) {
     this.lamp = document.createElement("div");
 
-    Operational.value(c_isOn).listen((on) => {
-      on ? this.on() : this.off();
+    Transaction.run(() => {
+      Operational.value(c_isOn).listen((on) => {
+        on ? this.turnOn() : this.turnOff();
+      });
     });
   }
 
-  private on() {
+  private turnOn() {
     this.lamp.classList.add("lamp-on");
     this.lamp.classList.remove("lamp-off");
   }
 
-  private off() {
+  private turnOff() {
     this.lamp.classList.remove("lamp-on");
     this.lamp.classList.add("lamp-off");
   }
