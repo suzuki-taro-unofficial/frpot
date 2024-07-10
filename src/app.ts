@@ -1,21 +1,21 @@
 import { Box } from "./components/box";
 import Button from "./components/button";
-import { Display } from "./components/display";
+import { Meter } from "./components/meter";
 import { ViewItem } from "./components/viewItem";
 
 export const app = (): ViewItem => {
-  const okButton = new Button("ok");
-  const cancelButton = new Button("cancel");
+  const countUpButton = new Button("Count up");
+  const countDownButton = new Button("Count down");
 
-  let c_displayContent = okButton.s_clicked
-    .map(() => "OK!")
-    .orElse(cancelButton.s_clicked.map(() => "Not OK..."))
-    .hold("Not OK...");
+  const s_minus = countUpButton.s_clicked.map(() => 1);
+  const s_plus = countDownButton.s_clicked.map(() => -1);
+  const s_delta = s_minus.orElse(s_plus);
 
-  const display = new Display(c_displayContent);
+  const count = s_delta.accum(0, (a, b) => a + b);
 
-  const buttons = new Box().appendChildren(okButton, cancelButton);
-  const root = new Box().appendChildren(display, buttons);
+  const buttons = new Box().appendChildren(countUpButton, countDownButton);
+  const meter = new Meter(count);
+  const root = new Box().appendChildren(meter, buttons);
 
   return root;
 };
