@@ -1,4 +1,4 @@
-import { Cell, Operational } from "sodiumjs";
+import { Cell, Operational, Transaction } from "sodiumjs";
 import { ViewItem } from "./viewItem";
 
 export class Display implements ViewItem<HTMLDivElement> {
@@ -7,8 +7,10 @@ export class Display implements ViewItem<HTMLDivElement> {
   constructor(c_content: Cell<string>) {
     this.display = document.createElement("div");
 
-    Operational.value(c_content).listen((content) => {
-      this.display.textContent = content;
+    Transaction.run(() => {
+      Operational.value(c_content).listen((content) => {
+        this.display.textContent = content;
+      });
     });
   }
 
