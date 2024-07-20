@@ -1,22 +1,43 @@
-import { Box } from "@/components/box";
 import Button from "@/components/button";
-import { Meter } from "@/components/meter";
 import { ViewItem } from "@/components/viewItem";
-import { Timer } from "@/timer";
+import { simulator } from "./simulator";
+import { pot } from "./pot/pot";
+import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
 
 export const app = (): ViewItem => {
-  const addMinuteButton = new Button("+1 Minute");
-  const s_add_minute = addMinuteButton.s_clicked.map(() => 60);
+  const s_tick = new Stream<Unit>();
 
-  const timer = new Timer(s_add_minute);
+  const c_waterIn = new Cell(0);
+  const cloop_heaterPower = new CellLoop<number>();
+  const cloop_hotWaterSupply = new CellLoop<boolean>();
 
-  timer.s_finished.listen(() => {
-    alert("timer is finished!");
+  const simulator_out = simulator({
+    s_tick,
+    c_waterIn: c_waterIn,
+    c_heaterPower: cloop_heaterPower,
+    c_hotWaterSupply: cloop_hotWaterSupply,
   });
 
-  const buttons = new Box().appendChildren(addMinuteButton);
-  const meter = new Meter(timer.c_seconds);
-  const root = new Box().appendChildren(meter, buttons);
+  const voilButton = new Button("沸騰");
+  const timerButton = new Button("タイマー");
+  const warmingConfigButton = new Button("保温設定");
+  const lockButton = new Button("解除");
+  const cover = new Button("ふた");
 
-  return root;
+  const pot_out = pot({
+    s_tick,
+    s_overflowSensor: simulator_out.s_waterOverflowSensor,
+    s_temperatureSensor: simulator_out.s_temperatureSensor,
+    s_waterLevelSensor: simulator_out.s_waterLevelSensor,
+    s_voilButtonClicked: voilButton.s_clicked,
+    s_timerButtonClicked: timerButton.s_clicked,
+    s_warmingButtonClicked: warmingConfigButton.s_clicked,
+    s_lockButtonClicked: lockButton.s_clicked,
+    s_cover: cover.s_clicked,
+  });
+
+  cloop_heaterPower.loop(pot_out.c_heaterPower);
+  cloop_hotWaterSupply.loop(pot_out.c_hotWaterSuply);
+
+  return new Button("hoge");
 };
