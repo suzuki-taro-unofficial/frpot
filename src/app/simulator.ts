@@ -1,4 +1,4 @@
-import { Cell, Stream, Unit } from "sodiumjs";
+import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
 
 type Input = {
   c_waterIn: Cell<number>;
@@ -16,14 +16,69 @@ type Output = {
 };
 
 export const simulator = ({
-  c_waterIn: _c_waterIn,
-  s_tick: _s_tick,
-  c_heaterPower: _c_heaterValue,
-  c_hotWaterSupply: _c_hotWaterSupply,
+  c_waterIn,
+  s_tick,
+  c_heaterPower,
+  c_hotWaterSupply,
 }: Input): Output => {
+  const maxAmount: number = 2000;
+
+  const c_amount: CellLoop<number> = new CellLoop();
+  c_amount.loop(
+    s_tick
+      .snapshot4(
+        c_amount,
+        c_waterIn,
+        c_hotWaterSupply,
+        (_u, amount, in_amount, should_out) => {
+          return amount + in_amount + (should_out ? -1 : 0);
+        },
+      )
+      .hold(0),
+  );
+
+  const c_temp: CellLoop<number> = new CellLoop();
+  c_temp.loop(
+    s_tick
+      .snapshot4(
+        c_temp,
+        c_amount,
+        c_heaterPower,
+        (_u, temp, _amount, power) => {
+          return temp + power;
+        },
+      )
+      .hold(0),
+  );
+
+  const s_temperatureSensor = s_tick.snapshot(c_temp, (_u, temp) => {
+    return temp;
+  });
+
+  const s_waterLevelSensor: Stream<WaterLevel> = s_tick.snapshot(
+    c_amount,
+    (_u, amount) => {
+      if (4 * amount < maxAmount) {
+        return 0;
+      } else if (4 * amount < 2 * maxAmount) {
+        return 1;
+      } else if (4 * amount < 3 * maxAmount) {
+        return 2;
+      } else if (amount < maxAmount) {
+        return 3;
+      } else {
+        return 4;
+      }
+    },
+  );
+
+  const s_waterOverflowSensor = s_tick.snapshot(c_amount, (_u, amount) => {
+    return amount > maxAmount + 100;
+  });
+
   return {
-    s_temperatureSensor: new Stream(),
-    s_waterLevelSensor: new Stream(),
-    s_waterOverflowSensor: new Stream(),
+    s_temperatureSensor,
+    s_waterLevelSensor,
+    s_waterOverflowSensor,
   };
 };
