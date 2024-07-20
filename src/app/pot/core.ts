@@ -6,13 +6,14 @@ type Input = {
   // from simulator
   s_temperatureSensor: Stream<number>;
   s_waterLevelSensor: Stream<0 | 1 | 2 | 3 | 4>;
-  s_overflowSensor: Stream<boolean>;
+  s_waterOverflowSensor: Stream<boolean>;
   // from ui
   s_voilButtonClicked: Stream<Unit>;
   s_timerButtonClicked: Stream<Unit>;
-  s_warmingButtonClicked: Stream<Unit>;
+  s_warmingConfigButtonClicked: Stream<Unit>;
   s_lockButtonClicked: Stream<Unit>;
   s_cover: Stream<Unit>;
+  c_hotWarterSupplyButtonPushing: Cell<boolean>;
 };
 
 type Output = {
@@ -22,7 +23,7 @@ type Output = {
   // for presenter
 };
 
-export const core = ({}: Input): Output => {
+export const core = ({ }: Input): Output => {
   return {
     // for simulator
     c_heaterPower: new Cell(0),
