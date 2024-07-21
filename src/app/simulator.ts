@@ -1,9 +1,13 @@
 import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
 
+// TODO:
+// 水量や熱量などの単位をどうするか
+// とりあえず水量はml
+
 type Input = {
-  c_waterIn: Cell<number>;
+  c_waterIn: Cell<number>; // tick事に何mlの水が来るか
   s_tick: Stream<Unit>;
-  c_heaterPower: Cell<number>;
+  c_heaterPower: Cell<number>; // ヒーターの熱量で単位はW
   c_hotWaterSupply: Cell<boolean>;
 };
 
@@ -21,9 +25,12 @@ export const simulator = ({
   c_heaterPower,
   c_hotWaterSupply,
 }: Input): Output => {
-  const maxAmount: number = 2000;
+  const capacity = 2000;
+  const actualCapacity = capacity + 200;
+  const emitPerSec = 10;
+  const secsPerTick = 1 / 60;
 
-  const c_amount: CellLoop<number> = new CellLoop();
+  const c_amount = new CellLoop<number>();
   c_amount.loop(
     s_tick
       .snapshot4(
@@ -31,40 +38,39 @@ export const simulator = ({
         c_waterIn,
         c_hotWaterSupply,
         (_u, amount, in_amount, should_out) => {
-          return amount + in_amount + (should_out ? -1 : 0);
+          return (
+            amount + in_amount + (should_out ? -emitPerSec * secsPerTick : 0)
+          );
         },
       )
       .hold(0),
   );
 
-  const c_temp: CellLoop<number> = new CellLoop();
+  // 現在の水の温度で単位は°C
+  const c_temp = new CellLoop<number>();
   c_temp.loop(
     s_tick
-      .snapshot4(
-        c_temp,
-        c_amount,
-        c_heaterPower,
-        (_u, temp, _amount, power) => {
-          return temp + power;
-        },
-      )
+      .snapshot4(c_temp, c_amount, c_heaterPower, (_, temp, amount, power) => {
+        const joule = power * secsPerTick;
+        return temp + joule / 4.2 / amount;
+      })
       .hold(0),
   );
 
-  const s_temperatureSensor = s_tick.snapshot(c_temp, (_u, temp) => {
+  const s_temperatureSensor = s_tick.snapshot(c_temp, (_, temp) => {
     return temp;
   });
 
   const s_waterLevelSensor: Stream<WaterLevel> = s_tick.snapshot(
     c_amount,
-    (_u, amount) => {
-      if (4 * amount < maxAmount) {
+    (_, amount) => {
+      if (4 * amount < capacity) {
         return 0;
-      } else if (4 * amount < 2 * maxAmount) {
+      } else if (4 * amount < 2 * capacity) {
         return 1;
-      } else if (4 * amount < 3 * maxAmount) {
+      } else if (4 * amount < 3 * capacity) {
         return 2;
-      } else if (amount < maxAmount) {
+      } else if (amount < capacity) {
         return 3;
       } else {
         return 4;
@@ -72,8 +78,8 @@ export const simulator = ({
     },
   );
 
-  const s_waterOverflowSensor = s_tick.snapshot(c_amount, (_u, amount) => {
-    return amount > maxAmount + 100;
+  const s_waterOverflowSensor = s_tick.snapshot(c_amount, (_, amount) => {
+    return amount > actualCapacity;
   });
 
   return {
