@@ -19,11 +19,11 @@ export const mode = (_: ModeInput): Stream<Mode> => {
 
 type KeepWarmMode = 'High' | 'Economy' | 'Milk';
 
-type KeepWarmInput = {
+type KeepWarmModeInput = {
   s_warmingConfigButtonClicked: Stream<Unit>;
 };
 
-export const keep_warm = (input: KeepWarmInput): Cell<KeepWarmMode> => {
+export const keep_warm_mode = (input: KeepWarmModeInput): Cell<KeepWarmMode> => {
   const warm_level = new CellLoop<KeepWarmMode>();
   const new_phase = input.s_warmingConfigButtonClicked.snapshot<KeepWarmMode, KeepWarmMode>(warm_level, (_, prev) => {
     switch (prev) {
