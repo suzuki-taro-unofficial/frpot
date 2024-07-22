@@ -1,5 +1,6 @@
-import { Cell, Stream, Unit } from "sodiumjs";
+import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
 
+// Modeは一般的すぎるので、なんか具体的な名前に変えたいが思いつかない
 type Mode = 'Boil' | 'KeepWarm' | 'Stop';
 
 type ModeInput = {
@@ -16,14 +17,27 @@ export const mode = (_: ModeInput): Stream<Mode> => {
   return new Stream();
 }
 
-type KeepWarm = 'High' | 'Economy' | 'Milk';
+type KeepWarmMode = 'High' | 'Economy' | 'Milk';
 
 type KeepWarmInput = {
   s_warmingConfigButtonClicked: Stream<Unit>;
 };
 
-export const keep_warm = (_: KeepWarmInput): Cell<KeepWarm> => {
-  return new Cell<KeepWarm>('High');
+export const keep_warm = (input: KeepWarmInput): Cell<KeepWarmMode> => {
+  const warm_level = new CellLoop<KeepWarmMode>();
+  const new_phase = input.s_warmingConfigButtonClicked.snapshot<KeepWarmMode, KeepWarmMode>(warm_level, (_, prev) => {
+    switch (prev) {
+      case 'High':
+        return 'Economy';
+      case 'Economy':
+        return 'Milk';
+      case 'Milk':
+        return 'High';
+    }
+  }
+  );
+  warm_level.loop(new_phase.hold('High'));
+  return warm_level;
 }
 
 type TimerInput = {
