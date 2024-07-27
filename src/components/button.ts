@@ -1,7 +1,7 @@
 import { Unit, Stream, StreamSink, Cell } from "sodiumjs";
 import { ViewItem } from "./viewItem";
 
-class Button implements ViewItem<HTMLButtonElement> {
+export class Button implements ViewItem<HTMLButtonElement> {
   private button: HTMLButtonElement;
   private ssink_clicked: StreamSink<Unit>;
   private ssink_released: StreamSink<Unit>;
@@ -47,5 +47,3 @@ class Button implements ViewItem<HTMLButtonElement> {
     return this;
   }
 }
-
-export default Button;
