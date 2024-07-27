@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "fmt": "prettier --write \"./src/**/*.ts\""
   },
   "devDependencies": {
     "prettier": "^3.3.3",
