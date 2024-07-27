@@ -1,4 +1,4 @@
-import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
+import { Cell, CellLoop, Stream, Transaction, Unit } from "sodiumjs";
 import { WaterLevel } from "../types";
 import { KeepWarmMode, Mode } from "./types";
 
@@ -81,37 +81,39 @@ export const error_temperature_not_increased = ({
   c_mode,
   c_warmLevel,
 }: ErrorTemperatureNotIncreasedInput): Stream<Unit> => {
-  const c_prevTime = new CellLoop<number>();
-  const s_oneMinutesPassed = s_tick
-    .snapshot(c_prevTime, (currTime, prevTime) => {
-      if (currTime - prevTime >= 60 * 1000) {
-        return currTime;
-      } else {
-        return null;
-      }
-    })
-    .filterNotNull() as Stream<number>;
-  c_prevTime.loop(s_oneMinutesPassed.hold(Date.now()));
+  return Transaction.run(() => {
+    const c_prevTime = new CellLoop<number>();
+    const s_oneMinutesPassed = s_tick
+      .snapshot(c_prevTime, (currTime, prevTime) => {
+        if (currTime - prevTime >= 60 * 1000) {
+          return currTime;
+        } else {
+          return null;
+        }
+      })
+      .filterNotNull() as Stream<number>;
+    c_prevTime.loop(s_oneMinutesPassed.hold(Date.now()));
 
-  const c_targetTemp = target_temperature({ c_mode, c_warmLevel });
-  const c_currTemp = s_temperature.hold(0);
-  const c_prevTemp = s_oneMinutesPassed
-    .snapshot(c_currTemp, (_, temp) => temp)
-    .hold(0);
+    const c_targetTemp = target_temperature({ c_mode, c_warmLevel });
+    const c_currTemp = s_temperature.hold(0);
+    const c_prevTemp = s_oneMinutesPassed
+      .snapshot(c_currTemp, (_, temp) => temp)
+      .hold(0);
 
-  return s_tick
-    .snapshot4(
-      c_currTemp,
-      c_prevTemp,
-      c_targetTemp,
-      (_, currTemp, prevTemp, targetTemp) => {
-        return currTemp - 5 <= targetTemp && prevTemp > currTemp;
-      },
-    )
-    .filter((cond) => {
-      return cond;
-    })
-    .mapTo(new Unit());
+    return s_tick
+      .snapshot4(
+        c_currTemp,
+        c_prevTemp,
+        c_targetTemp,
+        (_, currTemp, prevTemp, targetTemp) => {
+          return currTemp - 5 <= targetTemp && prevTemp > currTemp;
+        },
+      )
+      .filter((cond) => {
+        return cond;
+      })
+      .mapTo(new Unit());
+  });
 };
 
 type ErrorTemperatureTooHighInput = {
@@ -224,9 +226,11 @@ const s_lockButtonClicked = new Stream<Unit>();
 
 const c_lockState = new CellLoop<boolean>();
 c_lockState.loop(
-  s_lockButtonClicked.snapshot(c_lockState, (_, lockState) => {
-    return !lockState;
-  }).hold(true),
+  s_lockButtonClicked
+    .snapshot(c_lockState, (_, lockState) => {
+      return !lockState;
+    })
+    .hold(true),
 );
 
 //給湯のON/OFFを決める
