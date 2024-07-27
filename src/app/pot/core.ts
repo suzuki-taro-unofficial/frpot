@@ -31,7 +31,7 @@ type Output = {
   c_lock: Cell<boolean>;
 };
 
-export const core = ({ }: Input): Output => {
+export const core = ({}: Input): Output => {
   return {
     // for simulator
     c_heaterPower: new Cell(0),
@@ -425,34 +425,36 @@ export const heaterPower = ({
   c_status,
   c_temperature,
 }: heaterPowerInput): Cell<number> => {
-  return s_waterLevelSensor.snapshot4(
-    c_targetTemperature,
-    c_status,
-    c_temperature,
-    (waterLevel, targetTemperature, status, temperature) => {
-      switch (status) {
-        case "Boil":
-          return 100;
-        case "KeepWarm": {
-          if (targetTemperature - temperature < 0) return 0;
-          switch (waterLevel) {
-            case 0:
-              return 0;
-            case 1:
-              return (targetTemperature - temperature) ** 2 / 4;
-            case 2:
-              return (targetTemperature - temperature) ** 2 / 2;
-            case 3:
-              return ((targetTemperature - temperature) ** 2 * 3) / 4;
-            case 4:
-              return (targetTemperature - temperature) ** 2;
-            default:
-              return 0;
+  return s_waterLevelSensor
+    .snapshot4(
+      c_targetTemperature,
+      c_status,
+      c_temperature,
+      (waterLevel, targetTemperature, status, temperature) => {
+        switch (status) {
+          case "Boil":
+            return 100;
+          case "KeepWarm": {
+            if (targetTemperature - temperature < 0) return 0;
+            switch (waterLevel) {
+              case 0:
+                return 0;
+              case 1:
+                return (targetTemperature - temperature) ** 2 / 4;
+              case 2:
+                return (targetTemperature - temperature) ** 2 / 2;
+              case 3:
+                return ((targetTemperature - temperature) ** 2 * 3) / 4;
+              case 4:
+                return (targetTemperature - temperature) ** 2;
+              default:
+                return 0;
+            }
           }
+          case "Stop":
+            return 0;
         }
-        case "Stop":
-          return 0;
-      }
-    },
-  );
+      },
+    )
+    .hold(0);
 };
