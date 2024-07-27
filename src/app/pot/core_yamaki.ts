@@ -1,7 +1,7 @@
 import { Cell, Cellloop, Stream, Unit } from "sodiumjs";
 
 //ボタンのクリックのストリームを一つにまとめる
-type const buttonClickedInput = {
+type buttonClickedInput = {
   s_voilButtonClicked: Stream<Unit>;
   s_timerButtonClicked: Stream<Unit>;
   s_warmingConfigButtonClicked: Stream<Unit>;
@@ -9,9 +9,9 @@ type const buttonClickedInput = {
   s_hotWaterSupplyButtonClicked: Stream<Unit>;
 };
 
-export const s_buttonClicked =(_: buttonClickedInput): Stream<Unit> => {
+export const s_buttonClicked = (_: buttonClickedInput): Stream<Unit> => {
   return new Stream();
-}
+};
 
 //ビープストリーム
 
@@ -19,6 +19,17 @@ export const s_buttonClicked =(_: buttonClickedInput): Stream<Unit> => {
 type BEEPTYPE = `Long` | `Short`;
 //ビープの種類と回数のタプル
 const beepOut: [BEEPTYPE, number];
+
+type BeepType = LongBeep | ShortBeep;
+
+type LongBeep = {
+  kind: "Long";
+};
+
+type ShortBeep = {
+  kind: "Short";
+  count: number;
+};
 
 type beepInput = {
   s_error_temperature_too_hight: Stream<boolean>;
@@ -30,8 +41,8 @@ type beepInput = {
 };
 
 export const s_beep = (_: beepInput): Stream<beepOut> => {
-  return new Stream<Short, 3>;
-}
+  return new Stream<`Short`, 3>();
+};
 
 //水量を決めるストリーム
 type hotWatterSupplyInput = {
@@ -40,8 +51,8 @@ type hotWatterSupplyInput = {
 };
 
 export const s_hotWaterSupply = (_: hotWatterSupplyInput): Stream<boolean> => {
-  return new Stream<false>;
-}
+  return new Stream<false>();
+};
 
 //熱量ストリーム
 type heaterPowerInput = {
@@ -49,8 +60,6 @@ type heaterPowerInput = {
   tareget_Temperature: Cell<number>;
 };
 
-export s_heaterPower = (_: heaterPowerInput): Stream<Number> => {
-  return new Stream<100>;
-}
-
-
+export const s_heaterPower = (_: heaterPowerInput): Stream<Number> => {
+  return new Stream<100>();
+};
