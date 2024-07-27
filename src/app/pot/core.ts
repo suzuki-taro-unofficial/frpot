@@ -31,7 +31,7 @@ type Output = {
   c_lock: Cell<boolean>;
 };
 
-export const core = ({ }: Input): Output => {
+export const core = ({}: Input): Output => {
   return {
     // for simulator
     c_heaterPower: new Cell(0),
@@ -123,11 +123,12 @@ export const s_beep = ({
   s_buttonClicked,
   s_boiled,
 }: beepInput): Stream<beepType> => {
-  return s_errorTemperatureNotIncreased.mapTo<beepType>({kind: "Long"})
-    .orElse(s_errorTemperatureTooHigh.mapTo<beepType>({kind: "Long"}))
-    .orElse(s_timer.mapTo<beepType>({kind: "Short", count: 3}))
-    .orElse(s_buttonClicked.mapTo<beepType>({kind: "Short", count: 1}))
-    .orElse(s_boiled.mapTo<beepType>({kind: "Short", count: 1}));
+  return s_errorTemperatureNotIncreased
+    .mapTo<beepType>({ kind: "Long" })
+    .orElse(s_errorTemperatureTooHigh.mapTo<beepType>({ kind: "Long" }))
+    .orElse(s_timer.mapTo<beepType>({ kind: "Short", count: 3 }))
+    .orElse(s_buttonClicked.mapTo<beepType>({ kind: "Short", count: 1 }))
+    .orElse(s_boiled.mapTo<beepType>({ kind: "Short", count: 3 }));
 };
 
 //ロック状態かどうかを保持するセル
