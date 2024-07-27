@@ -10,7 +10,7 @@ type TargetTemperatureInput = {
 
 type ErrorTemperatureNotIncreasedInput = {
   s_tick: Stream<Unit>;
-  s_temperature: Stream<Unit>;
+  s_temperature: Stream<number>;
   c_mode: Cell<any>;
 };
 
