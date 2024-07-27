@@ -1,6 +1,6 @@
 import { app } from "@/app/app";
 import "./style.css";
-import { StreamSink, Unit } from "sodiumjs";
+import { StreamSink } from "sodiumjs";
 
 const main = () => {
   const ssink_tick = new StreamSink<number>();
