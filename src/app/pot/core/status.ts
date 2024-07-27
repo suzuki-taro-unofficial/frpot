@@ -101,23 +101,26 @@ const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
   return c_3MinutesPassed;
 };
 
-export const status = (inputs: StatusInput): Cell<Status> => {
+export const status = (inputs: StatusInput): Stream<Status> => {
   return Transaction.run(() => {
     const c_failure = failure_status(inputs);
     const s_keepWarm = keep_worm_status(inputs);
     const c_status = new CellLoop<Status>();
-    c_status.loop(
-      inputs.s_boilButtonClicked
-        .mapTo<Status>("Boil")
-        .orElse(
-          inputs.s_lid.filter((lid) => lid === "Close").mapTo<Status>("Boil"),
-        )
-        .orElse(s_keepWarm.mapTo<Status>("KeepWarm"))
-        .snapshot<boolean, Status>(c_failure, (newStatus, failure) => {
-          return failure ? "Stop" : newStatus;
-        })
-        .hold("Stop"),
-    );
-    return c_status;
+    const s_new_status = inputs.s_boilButtonClicked
+      .mapTo<Status>("Boil")
+      .orElse(
+        inputs.s_lid.filter((lid) => lid === "Close").mapTo<Status>("Boil"),
+      )
+      .orElse(s_keepWarm.mapTo<Status>("KeepWarm"))
+      .snapshot<boolean, Status>(c_failure, (newStatus, failure) => {
+        return failure ? "Stop" : newStatus;
+      })
+      .snapshot(c_status, (newStatus, prevStatus) => {
+        return {prevStatus: prevStatus, newStatus: newStatus};
+      })
+      .filter(({prevStatus, newStatus}) => prevStatus !== newStatus)
+      .map(({newStatus}) => newStatus)
+    c_status.loop(s_new_status.hold("Stop"));
+    return s_new_status;
   });
 };
