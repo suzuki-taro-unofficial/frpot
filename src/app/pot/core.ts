@@ -213,44 +213,45 @@ const failure_status = (inputs: StatusInput): Cell<boolean> => {
 
 // 保温状態に入るタイミングを監視する
 const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
+  // 100度未満の状態->100度以上の状態になった時刻を持つ
+  // その時刻から3分経ってない状態->3分経過した状態になったとき、戻り値のストリームを発火する
   const c_temperature = inputs.s_temperatureSensor.hold(0);
-  // 100度に達した時刻を持つセル。かつ、c_100degreeTimeが3分以内の場合は更新しない
-  const c_100degreeTime = new CellLoop<number>();
-  c_100degreeTime.loop(
-    inputs.s_tick
-      .snapshot(c_temperature, (time, temp) => {
-        return { time: time, temp: temp };
-      })
-      .filter(
-        ({ time, temp }) =>
-          temp >= 100 && time - c_100degreeTime.sample() >= 3 * 60 * 1000,
-      )
-      .map(({ time }) => time)
-      .hold(0),
-  );
-  const s_3minutesPassed = inputs.s_tick
-    .snapshot(c_100degreeTime, (time, degreeTime) => time - degreeTime)
-    .filter((time) => time >= 3 * 60 * 1000);
-  return s_3minutesPassed.mapTo(new Unit());
-};
+  const c_time = inputs.s_tick.hold(0);
+  const c_100DegreeTime = (inputs
+    .s_temperatureSensor
+    .snapshot(c_temperature, (newTemp, oldTemp) => {return {newTemp: newTemp, oldTemp: oldTemp}})
+    .filter(({newTemp, oldTemp}) => oldTemp < 100 && newTemp >= 100)
+    .snapshot(c_time, (_, time) => time)
+    .hold(0))
+  const c_3MinutesPassed = inputs
+    .s_tick
+    .snapshot3<number, number, boolean>(c_time, c_100DegreeTime, (currTime, prevTime, degreeTime) => {
+      const targetTime = degreeTime + 3 * 60 * 1000;
+      return prevTime < targetTime && currTime >= targetTime;
+    })
+    .filter((cond) => cond)
+    .mapTo(new Unit());
+  return c_3MinutesPassed;
+}
 
 export const status = (inputs: StatusInput): Cell<Status> => {
-  const c_failure = failure_status(inputs);
-  const s_keepWarm = keep_worm_status(inputs);
-  const c_status = new CellLoop<Status>();
-  c_status.loop(
-    inputs.s_boilButtonClicked
-      .mapTo<Status>("Boil")
-      .orElse(
-        inputs.s_lid.filter((lid) => lid === "Close").mapTo<Status>("Boil"),
-      )
-      .orElse(s_keepWarm.mapTo<Status>("KeepWarm"))
-      .snapshot<boolean, Status>(c_failure, (newStatus, failure) => {
-        return failure ? "Stop" : newStatus;
-      })
-      .hold("Stop"),
-  );
-  return c_status;
+  return Transaction.run(() => {
+    const c_failure = failure_status(inputs);
+    const s_keepWarm = keep_worm_status(inputs);
+    const c_status = new CellLoop<Status>();
+    c_status.loop(
+      inputs
+        .s_boilButtonClicked
+        .mapTo<Status>("Boil")
+        .orElse(inputs.s_lid.filter((lid) => lid === "Close").mapTo<Status>("Boil"))
+        .orElse(s_keepWarm.mapTo<Status>("KeepWarm"))
+        .snapshot<boolean, Status>(c_failure, (newStatus, failure) => {
+          return failure ? "Stop" : newStatus;
+        })
+        .hold("Stop")
+      );
+    return c_status;
+  })
 };
 
 type KeepWarmModeInput = {
