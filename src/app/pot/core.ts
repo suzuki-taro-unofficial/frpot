@@ -1,5 +1,12 @@
-import { Cell, CellLoop, Stream, Transaction, Unit } from "sodiumjs";
-import { LidState, WaterLevel } from "../types";
+import {
+  Cell,
+  CellLoop,
+  Operational,
+  Stream,
+  Transaction,
+  Unit,
+} from "sodiumjs";
+import { BeepType, LidState, WaterLevel } from "../types";
 import { KeepWarmMode, Status } from "./types";
 import { heaterPower } from "./core/heaterPower";
 import { target_temperature } from "./core/target_temperature";
@@ -37,6 +44,7 @@ type Output = {
   c_waterLevel: Cell<WaterLevel>;
   c_keepWarmMode: Cell<KeepWarmMode>;
   c_lock: Cell<boolean>;
+  s_beep: Stream<BeepType>;
 };
 
 export const core = ({
@@ -99,9 +107,29 @@ export const core = ({
     s_lockButtonClicked,
   });
 
-  const { c_remainigTime } = timer({
+  const { c_remainigTime, s_beep: s_timerZero } = timer({
     s_tick,
     s_timerButtonClicked,
+  });
+
+  const s_buttonClicked = buttonClicked({
+    s_boilButtonClicked,
+    s_timerButtonClicked,
+    s_warmingConfigButtonClicked,
+    s_lockButtonClicked,
+    s_hotWaterSupplyButtonClicked: Operational.updates(
+      c_hotWaterSupplyButtonPushing,
+    )
+      .filter((v) => v)
+      .mapTo(Unit.UNIT),
+  });
+
+  const s_beep = beep({
+    s_timer: s_timerZero,
+    s_boiled: new Stream(),
+    s_buttonClicked,
+    s_errorTemperatureTooHigh,
+    s_errorTemperatureNotIncreased,
   });
 
   return {
@@ -119,6 +147,7 @@ export const core = ({
     c_waterLevel,
     c_timer: c_remainigTime,
     c_lock,
+    s_beep,
   };
 };
 
@@ -149,7 +178,7 @@ export const keep_warm_mode = (
 
 //ボタンのクリックのストリームを一つにまとめる
 type buttonClickedInput = {
-  s_voilButtonClicked: Stream<Unit>;
+  s_boilButtonClicked: Stream<Unit>;
   s_timerButtonClicked: Stream<Unit>;
   s_warmingConfigButtonClicked: Stream<Unit>;
   s_lockButtonClicked: Stream<Unit>;
@@ -157,13 +186,13 @@ type buttonClickedInput = {
 };
 
 export const buttonClicked = ({
-  s_voilButtonClicked,
+  s_boilButtonClicked,
   s_timerButtonClicked,
   s_warmingConfigButtonClicked,
   s_lockButtonClicked,
   s_hotWaterSupplyButtonClicked,
 }: buttonClickedInput): Stream<Unit> => {
-  return s_voilButtonClicked
+  return s_boilButtonClicked
     .mapTo(new Unit())
     .orElse(s_timerButtonClicked.mapTo(new Unit()))
     .orElse(s_warmingConfigButtonClicked.mapTo(new Unit()))
@@ -173,17 +202,6 @@ export const buttonClicked = ({
 
 //ビープストリーム
 //beepの実装は検討中
-type beepType = longBeep | shortBeep;
-
-type longBeep = {
-  kind: "Long";
-};
-
-type shortBeep = {
-  kind: "Short";
-  count: number;
-};
-
 type beepInput = {
   s_errorTemperatureTooHigh: Stream<Unit>;
   s_errorTemperatureNotIncreased: Stream<Unit>;
@@ -192,19 +210,19 @@ type beepInput = {
   s_boiled: Stream<Unit>;
 };
 
-export const s_beep = ({
+export const beep = ({
   s_errorTemperatureTooHigh,
   s_errorTemperatureNotIncreased,
   s_timer,
   s_buttonClicked,
   s_boiled,
-}: beepInput): Stream<beepType> => {
+}: beepInput): Stream<BeepType> => {
   return s_errorTemperatureNotIncreased
-    .mapTo<beepType>({ kind: "Long" })
-    .orElse(s_errorTemperatureTooHigh.mapTo<beepType>({ kind: "Long" }))
-    .orElse(s_timer.mapTo<beepType>({ kind: "Short", count: 3 }))
-    .orElse(s_buttonClicked.mapTo<beepType>({ kind: "Short", count: 1 }))
-    .orElse(s_boiled.mapTo<beepType>({ kind: "Short", count: 3 }));
+    .mapTo<BeepType>({ kind: "Long" })
+    .orElse(s_errorTemperatureTooHigh.mapTo<BeepType>({ kind: "Long" }))
+    .orElse(s_timer.mapTo<BeepType>({ kind: "Short", count: 3 }))
+    .orElse(s_buttonClicked.mapTo<BeepType>({ kind: "Short", count: 1 }))
+    .orElse(s_boiled.mapTo<BeepType>({ kind: "Short", count: 3 }));
 };
 
 //ロック状態かどうかを保持するセル
