@@ -6,7 +6,7 @@ import { LidState, WaterLevel } from "./types";
 // とりあえず水量はml
 
 type Input = {
-  c_waterIn: Cell<number>; // tick事に何mlの水が来るか
+  c_waterIn: Cell<boolean>; // 水を入れるかどうか
   s_tick: Stream<number>;
   c_heaterPower: Cell<number>; // ヒーターの熱量で単位はW
   c_hotWaterSupply: Cell<boolean>;
@@ -40,6 +40,7 @@ export const simulator = ({
   const capacity = 2000;
   const actualCapacity = capacity + 200;
   const emitPerSec = 100;
+  const pourPerSec = 100;
 
   const c_lid = s_lid.accum<LidState>("Open", (_, state) =>
     state === "Open" ? "Close" : "Open",
@@ -59,12 +60,15 @@ export const simulator = ({
         c_waterIn,
         c_hotWaterSupply,
         c_lid,
-        (currTime, prevTime, amount, in_amount, should_out, lid) => {
-          return (
-            amount +
-            (lid == "Open" ? in_amount : 0) +
-            (should_out ? -emitPerSec * ((currTime - prevTime) / 1000) : 0)
-          );
+        (currTime, prevTime, amount, should_in, should_out, lid) => {
+          const in_amount =
+            lid == "Open" && should_in
+              ? pourPerSec * ((currTime - prevTime) / 1000)
+              : 0;
+          const out_amount = should_out
+            ? -emitPerSec * ((currTime - prevTime) / 1000)
+            : 0;
+          return amount + in_amount + out_amount;
         },
       )
       .map((amount) => clamp(amount, 0, actualCapacity))

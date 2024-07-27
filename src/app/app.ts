@@ -22,9 +22,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
 
     const simulatorOut = simulator({
       s_tick,
-      c_waterIn: waterInButton.c_pushing.map<number>((cond) =>
-        cond ? 100 : 0,
-      ),
+      c_waterIn: waterInButton.c_pushing,
       c_heaterPower: cloop_heaterPower,
       c_hotWaterSupply: cloop_hotWaterSupply,
       s_lid: lidButton.s_clicked,
