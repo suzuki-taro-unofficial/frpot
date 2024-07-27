@@ -24,10 +24,10 @@ type Output = {
   c_heaterPower: Cell<number>;
   c_hotWaterSuply: Cell<boolean>;
   // for ui
-  c_isLitboilingModeLamp: Cell<boolean>;
-  c_isLitWarmingModeLamp: Cell<boolean>;
+  c_isLitBoilingLamp: Cell<boolean>;
+  c_isLitWarmingLamp: Cell<boolean>;
   c_isLitWarmHighLamp: Cell<boolean>;
-  c_isLitWarmSavingsLamp: Cell<boolean>;
+  c_isLitWarmEconomyLamp: Cell<boolean>;
   c_isLitWarmMilkLamp: Cell<boolean>;
   c_temperatureLCD: Cell<string>;
   c_waterLevelMeter: Cell<WaterLevel>;
