@@ -3,8 +3,9 @@ import { ViewItem } from "./viewItem";
 export class Box implements ViewItem<HTMLDivElement> {
   private element: HTMLDivElement;
 
-  constructor() {
+  constructor(...children: ViewItem[]) {
     this.element = document.createElement("div");
+    this.appendChildren(...children);
   }
 
   getElement() {

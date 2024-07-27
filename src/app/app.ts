@@ -3,6 +3,10 @@ import { ViewItem } from "@/components/viewItem";
 import { simulator } from "./simulator";
 import { pot } from "./pot/pot";
 import { CellLoop, Stream } from "sodiumjs";
+import { Lamp } from "@/components/lamp";
+import { Display } from "@/components/display";
+import { Meter } from "@/components/meter";
+import { Box } from "@/components/box";
 
 export const app = (s_tick: Stream<number>): ViewItem => {
   const waterInButton = new Button("水追加");
@@ -10,7 +14,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
   const cloop_heaterPower = new CellLoop<number>();
   const cloop_hotWaterSupply = new CellLoop<boolean>();
 
-  const simulator_out = simulator({
+  const simulatorOut = simulator({
     s_tick,
     c_waterIn: waterInButton.c_pushing.map(() => 100),
     c_heaterPower: cloop_heaterPower,
@@ -24,9 +28,9 @@ export const app = (s_tick: Stream<number>): ViewItem => {
   const cover = new Button("ふた");
   const hotWaterSupplyButton = new Button("給湯");
 
-  const pot_out = pot({
+  const potOut = pot({
     s_tick,
-    ...simulator_out,
+    ...simulatorOut,
     s_voilButtonClicked: voilButton.s_clicked,
     s_timerButtonClicked: timerButton.s_clicked,
     s_warmingConfigButtonClicked: warmingConfigButton.s_clicked,
@@ -35,8 +39,25 @@ export const app = (s_tick: Stream<number>): ViewItem => {
     c_hotWarterSupplyButtonPushing: hotWaterSupplyButton.c_pushing,
   });
 
-  cloop_heaterPower.loop(pot_out.c_heaterPower);
-  cloop_hotWaterSupply.loop(pot_out.c_hotWaterSuply);
+  cloop_heaterPower.loop(potOut.c_heaterPower);
+  cloop_hotWaterSupply.loop(potOut.c_hotWaterSuply);
 
-  return new Button("hoge");
+  const boilingModeLamp = new Lamp(potOut.c_isLitboilingModeLamp);
+  const warmingModeLamp = new Lamp(potOut.c_isLitWarmingModeLamp);
+  const warmHighLamp = new Lamp(potOut.c_isLitWarmHighLamp);
+  const warmSavingLamp = new Lamp(potOut.c_isLitWarmSavingsLamp);
+  const warmMilkLamp = new Lamp(potOut.c_isLitWarmMilkLamp);
+  const temperatureLCD = new Display(potOut.c_temperatureLCD);
+  const timerLCD = new Display(potOut.c_timerLCD);
+  const waterLevelMeter = new Meter(potOut.c_waterLevelMeter);
+
+  return new Box(
+    new Box(boilingModeLamp, warmingModeLamp),
+    new Box(
+      temperatureLCD,
+      new Box(warmHighLamp, warmMilkLamp, warmSavingLamp),
+    ),
+    timerLCD,
+    waterLevelMeter,
+  );
 };
