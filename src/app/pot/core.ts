@@ -1,4 +1,4 @@
-import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
+import { Cell, CellLoop, Stream, Transaction, Unit } from "sodiumjs";
 import { WaterLevel } from "../types";
 import { KeepWarmMode, Mode } from "./types";
 
@@ -81,37 +81,39 @@ export const error_temperature_not_increased = ({
   c_mode,
   c_warmLevel,
 }: ErrorTemperatureNotIncreasedInput): Stream<Unit> => {
-  const c_prevTime = new CellLoop<number>();
-  const s_oneMinutesPassed = s_tick
-    .snapshot(c_prevTime, (currTime, prevTime) => {
-      if (currTime - prevTime >= 60 * 1000) {
-        return currTime;
-      } else {
-        return null;
-      }
-    })
-    .filterNotNull() as Stream<number>;
-  c_prevTime.loop(s_oneMinutesPassed.hold(Date.now()));
+  return Transaction.run(() => {
+    const c_prevTime = new CellLoop<number>();
+    const s_oneMinutesPassed = s_tick
+      .snapshot(c_prevTime, (currTime, prevTime) => {
+        if (currTime - prevTime >= 60 * 1000) {
+          return currTime;
+        } else {
+          return null;
+        }
+      })
+      .filterNotNull() as Stream<number>;
+    c_prevTime.loop(s_oneMinutesPassed.hold(Date.now()));
 
-  const c_targetTemp = target_temperature({ c_mode, c_warmLevel });
-  const c_currTemp = s_temperature.hold(0);
-  const c_prevTemp = s_oneMinutesPassed
-    .snapshot(c_currTemp, (_, temp) => temp)
-    .hold(0);
+    const c_targetTemp = target_temperature({ c_mode, c_warmLevel });
+    const c_currTemp = s_temperature.hold(0);
+    const c_prevTemp = s_oneMinutesPassed
+      .snapshot(c_currTemp, (_, temp) => temp)
+      .hold(0);
 
-  return s_tick
-    .snapshot4(
-      c_currTemp,
-      c_prevTemp,
-      c_targetTemp,
-      (_, currTemp, prevTemp, targetTemp) => {
-        return currTemp - 5 <= targetTemp && prevTemp > currTemp;
-      },
-    )
-    .filter((cond) => {
-      return cond;
-    })
-    .mapTo(new Unit());
+    return s_tick
+      .snapshot4(
+        c_currTemp,
+        c_prevTemp,
+        c_targetTemp,
+        (_, currTemp, prevTemp, targetTemp) => {
+          return currTemp - 5 <= targetTemp && prevTemp > currTemp;
+        },
+      )
+      .filter((cond) => {
+        return cond;
+      })
+      .mapTo(new Unit());
+  });
 };
 
 type ErrorTemperatureTooHighInput = {
@@ -171,11 +173,40 @@ export const keep_warm_mode = (
 
 type TimerInput = {
   s_timerButtonClicked: Stream<Unit>;
-  s_tick: Stream<Unit>; // ここのUnitは時刻を表すなにかに変更する
+  s_tick: Stream<number>;
 };
 
-export const timer = (_: TimerInput): Stream<number> => {
-  return new Stream();
+type TimerOutput = {
+  c_remainigTime: Cell<number>; // 単位は分
+  s_beep: Stream<Unit>;
+};
+
+export const timer = (inputs: TimerInput): TimerOutput => {
+  return Transaction.run(() => {
+    const c_previousTime = inputs.s_tick.hold(0);
+    // 経過時間はマイナスの値を持つ
+    const s_erapsed = inputs.s_tick.snapshot<number, number>(
+      c_previousTime,
+      (newTime, prevTime) => prevTime - newTime,
+    );
+    const s_add = inputs.s_timerButtonClicked.mapTo(60 * 1000);
+    const c_remainigTime = new CellLoop<number>();
+    const s_newTime = s_erapsed
+      .merge(s_add, (a, b) => a + b)
+      .snapshot(c_remainigTime, (delta, remaining) => {
+        return Math.max(0, remaining - delta);
+      });
+    c_remainigTime.loop(s_newTime.hold(0));
+    const s_beep = s_newTime
+      .filter((time) => time === 0) // 残り時間が0かつ
+      .snapshot(c_remainigTime, (_, time) => time)
+      .filter((time) => time > 0) // 一つ前の論理的時刻の残り時間が0でない時
+      .mapTo(new Unit());
+    return {
+      c_remainigTime: c_remainigTime.map((time) => time / 1000 / 60),
+      s_beep: s_beep
+    };
+  });
 };
 
 //ボタンのクリックのストリームを一つにまとめる
@@ -206,8 +237,8 @@ type shortBeep = {
 };
 
 type beepInput = {
-  s_error_temperature_too_hight: Stream<boolean>;
-  s_error_temperature_not_increased: Stream<boolean>;
+  s_errorTemperatureTooHight: Stream<Unit>;
+  s_errorTemperatureNotIncreased: Stream<Unit>;
   s_timer: Stream<Unit>;
   s_mode: Stream<Mode>;
   s_bottunClicked: Stream<Unit>;
@@ -249,7 +280,7 @@ export const hotWaterSupply = ({s_tick, c_lockState, c_hotWaterSupplyButtonPushi
 //熱量ストリーム
 type heaterPowerInput = {
   s_waterLevelSensor: Stream<WaterLevel>;
-  tareget_Temperature: Cell<number>;
+  c_taregetTemperature: Cell<number>;
 };
 
 export const heaterPower = (_: heaterPowerInput): Cell<number> => {

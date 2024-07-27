@@ -111,7 +111,7 @@ export class Meter implements ViewItem<HTMLDivElement> {
   private meterLevel3Inner: HTMLDivElement;
   private meterLevel4Inner: HTMLDivElement;
 
-  constructor(c_percentage: Cell<number>) {
+  constructor(c_percentage: Cell<0 | 1 | 2 | 3 | 4>) {
     this.meter = document.createElement("div");
     this.meter.className = meterStyle;
     this.meterLevel1 = document.createElement("div");
