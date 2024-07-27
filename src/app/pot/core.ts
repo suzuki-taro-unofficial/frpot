@@ -177,7 +177,7 @@ type TimerInput = {
 };
 
 type TimerOutput = {
-  c_remainigTime: Cell<number>;
+  c_remainigTime: Cell<number>; // 単位は分
   s_beep: Stream<Unit>;
 };
 
@@ -198,12 +198,12 @@ export const timer = (inputs: TimerInput): TimerOutput => {
       });
     c_remainigTime.loop(s_newTime.hold(0));
     const s_beep = s_newTime
-      .filter((time) => time === 0)
+      .filter((time) => time === 0) // 残り時間が0かつ
       .snapshot(c_remainigTime, (_, time) => time)
-      .filter((time) => time > 0)
+      .filter((time) => time > 0) // 一つ前の論理的時刻の残り時間が0でない時
       .mapTo(new Unit());
     return {
-      c_remainigTime: c_remainigTime,
+      c_remainigTime: c_remainigTime.map((time) => time / 1000 / 60),
       s_beep: s_beep
     };
   });
