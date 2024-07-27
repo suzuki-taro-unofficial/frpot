@@ -1,6 +1,6 @@
 import { Cell, CellLoop, Stream, Transaction, Unit } from "sodiumjs";
 import { WaterLevel } from "../types";
-import { KeepWarmMode, Mode as Status } from "./types";
+import { KeepWarmMode, Status } from "./types";
 
 type Input = {
   // from root
@@ -36,7 +36,7 @@ export const core = ({}: Input): Output => {
     c_heaterPower: new Cell(0),
     c_hotWaterSuply: new Cell(false),
     // for presenter
-    c_mode: new Cell<Mode>("Stop"),
+    c_status: new Cell<Status>("Stop"),
     c_keepWarmMode: new Cell<KeepWarmMode>("High"),
     c_temperature: new Cell(0),
     c_waterLevel: new Cell<WaterLevel>(0),
