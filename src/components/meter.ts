@@ -1,6 +1,6 @@
 import { Cell, Operational, Transaction } from "sodiumjs";
 import { ViewItem } from "./viewItem";
-import { css, injectGlobal } from "@emotion/css";
+import { css } from "@emotion/css";
 
 const meterStyle = css`
   display: flex;
@@ -9,11 +9,8 @@ const meterStyle = css`
 `;
 
 const meterLevelBaseStyle = css`
-  display: flex;
-  align-items: end;
   height: 50px;
   width: 20px;
-  background: gray;
   border: solid 1px #444444;
 `;
 
@@ -55,32 +52,18 @@ export class Meter implements ViewItem<HTMLDivElement> {
   }
 
   private changeMeter(level: 0 | 1 | 2 | 3 | 4) {
-    if (level === 0) {
-      this.meterLevel1.classList.add(meterLevelLitStyle);
-      this.meterLevel2.classList.remove(meterLevelLitStyle);
-      this.meterLevel3.classList.remove(meterLevelLitStyle);
-      this.meterLevel4.classList.remove(meterLevelLitStyle);
-    } else if (level === 1) {
-      this.meterLevel1.classList.add(meterLevelLitStyle);
-      this.meterLevel2.classList.add(meterLevelLitStyle);
-      this.meterLevel3.classList.remove(meterLevelLitStyle);
-      this.meterLevel4.classList.remove(meterLevelLitStyle);
-    } else if (level === 2) {
-      this.meterLevel1.classList.add(meterLevelLitStyle);
-      this.meterLevel2.classList.add(meterLevelLitStyle);
-      this.meterLevel3.classList.remove(meterLevelLitStyle);
-      this.meterLevel4.classList.remove(meterLevelLitStyle);
-    } else if (level === 3) {
-      this.meterLevel1.classList.add(meterLevelLitStyle);
-      this.meterLevel2.classList.add(meterLevelLitStyle);
-      this.meterLevel3.classList.add(meterLevelLitStyle);
-      this.meterLevel4.classList.remove(meterLevelLitStyle);
-    } else if (level === 4) {
-      this.meterLevel1.classList.add(meterLevelLitStyle);
-      this.meterLevel2.classList.add(meterLevelLitStyle);
-      this.meterLevel3.classList.add(meterLevelLitStyle);
-      this.meterLevel4.classList.add(meterLevelLitStyle);
-    }
+    level >= 1
+      ? this.meterLevel1.classList.add(meterLevelLitStyle)
+      : this.meterLevel1.classList.remove(meterLevelLitStyle);
+    level >= 2
+      ? this.meterLevel2.classList.add(meterLevelLitStyle)
+      : this.meterLevel2.classList.remove(meterLevelLitStyle);
+    level >= 3
+      ? this.meterLevel3.classList.add(meterLevelLitStyle)
+      : this.meterLevel3.classList.remove(meterLevelLitStyle);
+    level === 4
+      ? this.meterLevel4.classList.add(meterLevelLitStyle)
+      : this.meterLevel4.classList.remove(meterLevelLitStyle);
   }
 
   getElement() {
