@@ -31,7 +31,7 @@ type Output = {
   c_lock: Cell<boolean>;
 };
 
-export const core = ({ }: Input): Output => {
+export const core = ({}: Input): Output => {
   return {
     // for simulator
     c_heaterPower: new Cell(0),
@@ -257,7 +257,6 @@ export const status = (inputs: StatusInput): Cell<Status> => {
     );
     return c_status;
   });
-
 };
 
 type KeepWarmModeInput = {
