@@ -1,6 +1,14 @@
 import { Cell, CellLoop, Stream, Transaction, Unit } from "sodiumjs";
 import { LidState, WaterLevel } from "../types";
 import { KeepWarmMode, Status } from "./types";
+import { heaterPower } from "./core/heaterPower";
+import { target_temperature } from "./core/target_temperature";
+import { status } from "./core/status";
+import {
+  error_temperature_not_increased,
+  error_temperature_too_hight,
+} from "./core/error";
+import { timer } from "./core/timer";
 
 type Input = {
   // from root
@@ -11,7 +19,7 @@ type Input = {
   s_waterOverflowSensor: Stream<boolean>;
   s_lidStateSensor: Stream<LidState>;
   // from ui
-  s_voilButtonClicked: Stream<Unit>;
+  s_boilButtonClicked: Stream<Unit>;
   s_timerButtonClicked: Stream<Unit>;
   s_warmingConfigButtonClicked: Stream<Unit>;
   s_lockButtonClicked: Stream<Unit>;
@@ -31,18 +39,82 @@ type Output = {
   c_lock: Cell<boolean>;
 };
 
-export const core = ({}: Input): Output => {
+export const core = ({
+  s_tick,
+  s_temperatureSensor,
+  s_waterLevelSensor,
+  s_waterOverflowSensor,
+  s_lidStateSensor,
+  s_boilButtonClicked,
+  s_timerButtonClicked,
+  s_warmingConfigButtonClicked,
+  s_lockButtonClicked,
+}: Input): Output => {
+  const c_temperature = s_temperatureSensor.hold(0);
+  const c_waterLevel = s_waterLevelSensor.hold(0);
+
+  const c_warmLevel = keep_warm_mode({
+    s_warmingConfigButtonClicked,
+  });
+  const s_errorTemperatureTooHigh = error_temperature_too_hight({
+    s_temperature: s_temperatureSensor,
+  });
+
+  const cloop_status = new CellLoop<Status>();
+  const c_status: Cell<Status> = cloop_status;
+
+  const s_errorTemperatureNotIncreased = error_temperature_not_increased({
+    s_tick,
+    s_temperature: s_temperatureSensor,
+    c_warmLevel,
+    c_status,
+  });
+
+  cloop_status.loop(
+    status({
+      s_boilButtonClicked,
+      s_tick,
+      s_lid: s_lidStateSensor,
+      s_waterLevelSensor,
+      s_temperatureSensor,
+      s_waterOverflowSensor,
+      s_errorTemperatureTooHigh,
+      s_errorTemperatureNotIncreased,
+    }),
+  );
+
+  const c_targetTemperature = target_temperature({
+    c_status,
+    c_warmLevel,
+  });
+
+  const c_heaterPower = heaterPower({
+    s_waterLevelSensor,
+    c_status,
+    c_temperature,
+    c_targetTemperature,
+  });
+
+  const c_lock = lockState({
+    s_lockButtonClicked,
+  });
+
+  const { c_remainigTime } = timer({
+    s_tick,
+    s_timerButtonClicked,
+  });
+
   return {
     // for simulator
-    c_heaterPower: new Cell(0),
+    c_heaterPower,
     c_hotWaterSuply: new Cell(false),
     // for presenter
-    c_status: new Cell<Status>("Stop"),
-    c_keepWarmMode: new Cell<KeepWarmMode>("High"),
-    c_temperature: new Cell(0),
-    c_waterLevel: new Cell<WaterLevel>(0),
-    c_timer: new Cell(0),
-    c_lock: new Cell(true),
+    c_status,
+    c_keepWarmMode: c_warmLevel,
+    c_temperature,
+    c_waterLevel,
+    c_timer: c_remainigTime,
+    c_lock,
   };
 };
 
