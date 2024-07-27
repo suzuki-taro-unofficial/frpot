@@ -20,7 +20,7 @@ type BEEPTYPE = `Long` | `Short`;
 //ビープの種類と回数のタプル
 const beepOut: [BEEPTYPE, number];
 
-//beeoの実装は検討中
+//beepの実装は検討中
 type BeepType = LongBeep | ShortBeep;
 
 type LongBeep = {
@@ -45,13 +45,21 @@ export const s_beep = (_: beepInput): Stream<beepOut> => {
   return new Stream<`Short`, 3>();
 };
 
-//水量を決めるストリーム
-type hotWatterSupplyInput = {
-  s_lockButtonClicked: Stream<Unit>;
+//ロック状態かどうかを保持するセル
+//const c_lockState = new CellLoop<boolean>();
+//c_lockState.loop(
+//  s_lockButtonClicked.snapshot(
+//  ).hold(true),
+//);
+
+//給湯のON/OFFを決める
+type hotWaterSupplyInput = {
+  s_tick: Stream<Unit>;
+  c_lockState: Cell<boolean>;
   c_hotWaterSupplyButtonPushing: Cell<boolean>;
 };
 
-export const hotWaterSupply = (_: hotWatterSupplyInput): Stream<boolean> => {
+export const hotWaterSupply = (_: hotWaterSupplyInput): Cell<boolean> => {
   return new Stream<false>();
 };
 
