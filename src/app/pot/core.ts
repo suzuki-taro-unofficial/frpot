@@ -71,12 +71,27 @@ type ErrorTemperatureNotIncreasedInput = {
   s_tick: Stream<Unit>;
   s_temperature: Stream<number>;
   c_mode: Cell<Mode>;
+  c_warmLevel: Cell<KeepWarmMode>;
 };
 
-export const error_temperature_not_increased = (
-  _: ErrorTemperatureNotIncreasedInput,
-): Stream<Unit> => {
-  return new Stream();
+// FIXME: 壊れた実装かもしれない
+export const error_temperature_not_increased = ({
+  s_tick,
+  s_temperature,
+  c_mode,
+  c_warmLevel,
+}: ErrorTemperatureNotIncreasedInput): Stream<Unit> => {
+  const c_targetTemp = target_temperature({ c_mode, c_warmLevel });
+  const c_prevTemp = s_temperature.hold(0);
+
+  return s_temperature
+    .snapshot3(c_prevTemp, c_targetTemp, (currTemp, prevTemp, targetTemp) => {
+      return currTemp - 5 <= targetTemp && prevTemp > currTemp;
+    })
+    .filter((cond) => {
+      return cond;
+    })
+    .mapTo(new Unit());
 };
 
 type ErrorTemperatureTooHighInput = {
