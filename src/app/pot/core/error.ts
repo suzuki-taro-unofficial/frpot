@@ -30,7 +30,7 @@ export const error_temperature_not_increased = ({
       .snapshot(c_currTemp, (_, temp) => temp)
       .hold(0);
 
-    return s_tick
+    return s_oneMinutesPassed
       .snapshot4(
         c_currTemp,
         c_prevTemp,
@@ -39,9 +39,7 @@ export const error_temperature_not_increased = ({
           return currTemp - 5 <= targetTemp && prevTemp > currTemp;
         },
       )
-      .filter((cond) => {
-        return cond;
-      })
+      .filter((cond) => cond)
       .mapTo(new Unit());
   });
 };
