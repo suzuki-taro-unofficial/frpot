@@ -27,7 +27,7 @@ type Output = {
   c_timer: Cell<number>;
   c_temperature: Cell<number>;
   c_waterLevel: Cell<WaterLevel>;
-  c_warmLevel: Cell<number>;
+  c_keepWarmMode: Cell<KeepWarmMode>;
 };
 
 export const core = ({}: Input): Output => {
@@ -36,6 +36,11 @@ export const core = ({}: Input): Output => {
     c_heaterPower: new Cell(0),
     c_hotWaterSuply: new Cell(false),
     // for presenter
+    c_mode: new Cell<Mode>("Stop"),
+    c_keepWarmMode: new Cell<KeepWarmMode>("High"),
+    c_temperature: new Cell(0),
+    c_waterLevel: new Cell<WaterLevel>(0),
+    c_timer: new Cell(0),
   };
 };
 
