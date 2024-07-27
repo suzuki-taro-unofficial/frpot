@@ -17,7 +17,7 @@ type Input = {
   s_warmingConfigButtonClicked: Stream<Unit>;
   s_lockButtonClicked: Stream<Unit>;
   s_cover: Stream<Unit>;
-  c_hotWarterSupplyButtonPushing: Cell<boolean>;
+  c_hotWaterSupplyButtonPushing: Cell<boolean>;
 };
 
 type Output = {
