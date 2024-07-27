@@ -49,7 +49,6 @@ export class Meter implements ViewItem<HTMLDivElement> {
 
     Transaction.run(() => {
       Operational.value(c_percentage).listen((percentage) => {
-        console.log(percentage);
         this.changeMeter(percentage);
       });
     });
