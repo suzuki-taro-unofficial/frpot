@@ -1,7 +1,7 @@
 import { core } from "@/app/pot/core";
 import { Cell, Stream, Unit } from "sodiumjs";
 import { presenter } from "./presenter";
-import { LidState, WaterLevel } from "../types";
+import { BeepType, LidState, WaterLevel } from "../types";
 
 type Input = {
   // from root
@@ -34,6 +34,7 @@ type Output = {
   c_waterLevelMeter: Cell<WaterLevel>;
   c_timerLCD: Cell<string>;
   c_isLitLockLamp: Cell<boolean>;
+  s_beep: Stream<BeepType>;
 };
 
 export const pot = (input: Input): Output => {

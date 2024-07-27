@@ -3,6 +3,7 @@ import { simulator } from "./simulator";
 import { pot } from "./pot/pot";
 import { CellLoop, Stream, Transaction } from "sodiumjs";
 import { Button, Display, HStack, Lamp, Meter, VStack } from "@/components";
+import { beep } from "@/util";
 
 export const app = (s_tick: Stream<number>): ViewItem => {
   // 入力のユーザインタフェース生成
@@ -43,6 +44,10 @@ export const app = (s_tick: Stream<number>): ViewItem => {
     cloop_hotWaterSupply.loop(potOut.c_hotWaterSuply);
 
     return potOut;
+  });
+
+  potOut.s_beep.listen(() => {
+    beep();
   });
 
   // 出力のユーザインタフェース生成
