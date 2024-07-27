@@ -20,6 +20,16 @@ type Output = {
   s_lidStateSensor: Stream<LidState>;
 };
 
+const clamp = (v: number, l: number, r: number): number => {
+  if (v < l) {
+    return l;
+  } else if (v > r) {
+    return r;
+  } else {
+    return v;
+  }
+};
+
 export const simulator = ({
   c_waterIn,
   s_lid,
@@ -29,7 +39,14 @@ export const simulator = ({
 }: Input): Output => {
   const capacity = 2000;
   const actualCapacity = capacity + 200;
-  const emitPerSec = 10;
+  const emitPerSec = 100;
+
+  const c_lid = s_lid.accum<LidState>("Open", (_, state) =>
+    state === "Open" ? "Close" : "Open",
+  );
+  const s_lidStateSensor = s_tick.snapshot1(c_lid);
+
+  c_lid.listen((s) => console.log("lid: ", s));
 
   const c_prevTime = s_tick.hold(Date.now());
 
@@ -49,9 +66,12 @@ export const simulator = ({
           );
         },
       )
-      .filter((new_amount) => new_amount <= actualCapacity && new_amount >= 0)
+      .gate(c_lid.map((s) => s === "Open"))
+      .map((amount) => clamp(amount, 0, actualCapacity))
       .hold(0),
   );
+
+  c_amount.listen((amount) => console.log("amount ", amount));
 
   // 現在の水の温度で単位は°C
   const c_temp = new CellLoop<number>();
@@ -100,11 +120,6 @@ export const simulator = ({
   const s_waterOverflowSensor = s_tick.snapshot(c_amount, (_, amount) => {
     return amount > actualCapacity;
   });
-
-  const c_lid = s_lid.accum<LidState>("Open", (state, _) =>
-    state === "Open" ? "Close" : "Open",
-  );
-  const s_lidStateSensor = s_tick.snapshot1(c_lid);
 
   return {
     s_temperatureSensor,

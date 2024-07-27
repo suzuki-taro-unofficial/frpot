@@ -15,7 +15,7 @@ const meterLevelBaseStyle = css`
 `;
 
 const meterLevelLitStyle = css`
-  background: rightblue;
+  background: #6688ff;
 `;
 
 export class Meter implements ViewItem<HTMLDivElement> {
