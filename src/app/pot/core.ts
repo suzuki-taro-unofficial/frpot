@@ -30,7 +30,7 @@ type Output = {
   c_warmLevel: Cell<number>;
 };
 
-export const core = ({ }: Input): Output => {
+export const core = ({}: Input): Output => {
   return {
     // for simulator
     c_heaterPower: new Cell(0),
@@ -291,13 +291,15 @@ export const hotWaterSupply = ({
   c_lockState,
   c_hotWaterSupplyButtonPushing,
 }: hotWaterSupplyInput): Cell<boolean> => {
-  return s_tick.snapshot3(
-    c_lockState,
-    c_hotWaterSupplyButtonPushing,
-    (_, lockState, hotWaterSupplyButtonPushing) => {
-      return lockState && hotWaterSupplyButtonPushing;
-    },
-  );
+  return s_tick
+    .snapshot3(
+      c_lockState,
+      c_hotWaterSupplyButtonPushing,
+      (_, lockState, hotWaterSupplyButtonPushing) => {
+        return lockState && hotWaterSupplyButtonPushing;
+      },
+    )
+    .hold(false);
 };
 
 //熱量ストリーム
