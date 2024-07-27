@@ -28,6 +28,7 @@ type Output = {
   c_temperature: Cell<number>;
   c_waterLevel: Cell<WaterLevel>;
   c_keepWarmMode: Cell<KeepWarmMode>;
+  c_lock: Cell<boolean>;
 };
 
 export const core = ({}: Input): Output => {
@@ -41,6 +42,7 @@ export const core = ({}: Input): Output => {
     c_temperature: new Cell(0),
     c_waterLevel: new Cell<WaterLevel>(0),
     c_timer: new Cell(0),
+    c_lock: new Cell(true),
   };
 };
 

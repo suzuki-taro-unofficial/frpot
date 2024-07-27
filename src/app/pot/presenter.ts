@@ -8,6 +8,7 @@ type Input = {
   c_temperature: Cell<number>;
   c_waterLevel: Cell<WaterLevel>;
   c_timer: Cell<number>;
+  c_lock: Cell<boolean>;
 };
 
 type Output = {
@@ -19,6 +20,7 @@ type Output = {
   c_temperatureLCD: Cell<string>;
   c_waterLevelMeter: Cell<WaterLevel>;
   c_timerLCD: Cell<string>;
+  c_isLitLockLamp: Cell<boolean>;
 };
 
 export const presenter = ({
@@ -27,6 +29,7 @@ export const presenter = ({
   c_temperature,
   c_waterLevel,
   c_timer,
+  c_lock,
 }: Input): Output => {
   return {
     c_isLitBoilingLamp: c_status.map((s) => s === "Boil"),
@@ -37,5 +40,6 @@ export const presenter = ({
     c_temperatureLCD: c_temperature.map((temp) => temp.toString()),
     c_timerLCD: c_timer.map((t) => t.toString()),
     c_waterLevelMeter: c_waterLevel,
+    c_isLitLockLamp: c_lock,
   };
 };

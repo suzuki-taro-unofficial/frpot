@@ -2,7 +2,7 @@ import { ViewItem } from "@/components/viewItem";
 import { simulator } from "./simulator";
 import { pot } from "./pot/pot";
 import { CellLoop, Stream, Transaction } from "sodiumjs";
-import { Box, Button, Display, Lamp, Meter } from "@/components";
+import { Button, Display, HStack, Lamp, Meter, VStack } from "@/components";
 
 export const app = (s_tick: Stream<number>): ViewItem => {
   // 入力のユーザインタフェース生成
@@ -44,23 +44,30 @@ export const app = (s_tick: Stream<number>): ViewItem => {
   });
 
   // 出力のユーザインタフェース生成
-  const boilingModeLamp = new Lamp(potOut.c_isLitBoilingLamp);
-  const warmingModeLamp = new Lamp(potOut.c_isLitWarmingLamp);
-  const warmHighLamp = new Lamp(potOut.c_isLitWarmHighLamp);
-  const warmSavingLamp = new Lamp(potOut.c_isLitWarmEconomyLamp);
-  const warmMilkLamp = new Lamp(potOut.c_isLitWarmMilkLamp);
+  const boilingModeLamp = new Lamp("沸騰", potOut.c_isLitBoilingLamp);
+  const warmingModeLamp = new Lamp("保温", potOut.c_isLitWarmingLamp);
+  const warmHighLamp = new Lamp("高温", potOut.c_isLitWarmHighLamp);
+  const warmSavingLamp = new Lamp("節約", potOut.c_isLitWarmEconomyLamp);
+  const warmMilkLamp = new Lamp("ミルク", potOut.c_isLitWarmMilkLamp);
   const temperatureLCD = new Display(potOut.c_temperatureLCD);
   const timerLCD = new Display(potOut.c_timerLCD);
   const waterLevelMeter = new Meter(potOut.c_waterLevelMeter);
+  const lockLamp = new Lamp("ロック", potOut.c_isLitLockLamp);
 
   // ユーザインタフェースの構築
-  return new Box(
-    new Box(boilingModeLamp, warmingModeLamp),
-    new Box(
-      temperatureLCD,
-      new Box(warmHighLamp, warmMilkLamp, warmSavingLamp),
+  return new HStack(
+    new VStack(voilButton, timerButton, timerLCD),
+    new VStack(
+      new HStack(boilingModeLamp, warmingModeLamp),
+      new HStack(
+        new VStack(
+          temperatureLCD,
+          new HStack(warmHighLamp, warmMilkLamp, warmSavingLamp),
+          warmingConfigButton,
+        ),
+      ),
     ),
-    timerLCD,
     waterLevelMeter,
+    new VStack(hotWaterSupplyButton, lockButton, lockLamp),
   );
 };
