@@ -199,9 +199,9 @@ export const timer = (inputs: TimerInput): TimerOutput => {
     c_remainigTime.loop(s_newTime.hold(0));
     const s_beep = s_newTime
       .filter((time) => time === 0)
-      .mapTo(new Unit())
       .snapshot(c_remainigTime, (_, time) => time)
-      .filter((time) => time > 0);
+      .filter((time) => time > 0)
+      .mapTo(new Unit());
     return {
       c_remainigTime: c_remainigTime,
       s_beep: s_beep
