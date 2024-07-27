@@ -44,24 +44,43 @@ type TargetTemperatureInput = {
   c_warmLevel: Cell<KeepWarmMode>;
 };
 
+export const target_temperature = ({
+  c_mode,
+  c_warmLevel,
+}: TargetTemperatureInput): Cell<number> => {
+  return c_mode.lift(c_warmLevel, (mode, warmLevel): number => {
+    switch (mode) {
+      case "Boil":
+        return 100;
+      case "KeepWarm":
+        switch (warmLevel) {
+          case "High":
+            return 98;
+          case "Economy":
+            return 90;
+          case "Milk":
+            return 60;
+        }
+      case "Stop":
+        return 0; // TODO: 適切な温度は？
+    }
+  });
+};
+
 type ErrorTemperatureNotIncreasedInput = {
   s_tick: Stream<Unit>;
   s_temperature: Stream<number>;
   c_mode: Cell<Mode>;
 };
 
-type ErrorTemperatureTooHighInput = {
-  s_temperature: Stream<number>;
-};
-
-export const target_temperature = (_: TargetTemperatureInput): Cell<number> => {
-  return new Cell(0);
-};
-
 export const error_temperature_not_increased = (
   _: ErrorTemperatureNotIncreasedInput,
 ): Stream<Unit> => {
   return new Stream();
+};
+
+type ErrorTemperatureTooHighInput = {
+  s_temperature: Stream<number>;
 };
 
 export const error_temperature_too_hight = ({
