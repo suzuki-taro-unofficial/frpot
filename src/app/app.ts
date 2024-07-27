@@ -9,7 +9,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
   const waterInButton = new Button("水追加");
   const lidButtun = new Button("ふた");
 
-  const voilButton = new Button("沸騰");
+  const boilButton = new Button("沸騰");
   const timerButton = new Button("タイマー");
   const warmingConfigButton = new Button("保温設定");
   const lockButton = new Button("解除");
@@ -34,7 +34,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
     const potOut = pot({
       s_tick,
       ...simulatorOut,
-      s_voilButtonClicked: voilButton.s_clicked,
+      s_boilButtonClicked: boilButton.s_clicked,
       s_timerButtonClicked: timerButton.s_clicked,
       s_warmingConfigButtonClicked: warmingConfigButton.s_clicked,
       s_lockButtonClicked: lockButton.s_clicked,
@@ -62,7 +62,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
   // ユーザインタフェースの構築
   return new HStack(
     new VStack(waterInButton, lidButtun),
-    new VStack(voilButton, timerButton, timerLCD),
+    new VStack(boilButton, timerButton, timerLCD),
     new VStack(
       new HStack(boilingModeLamp, warmingModeLamp),
       new HStack(

@@ -12,7 +12,7 @@ type Input = {
   s_waterOverflowSensor: Stream<boolean>;
   s_lidStateSensor: Stream<LidState>;
   // from ui
-  s_voilButtonClicked: Stream<Unit>;
+  s_boilButtonClicked: Stream<Unit>;
   s_timerButtonClicked: Stream<Unit>;
   s_warmingConfigButtonClicked: Stream<Unit>;
   s_lockButtonClicked: Stream<Unit>;
