@@ -187,6 +187,6 @@ type heaterPowerInput = {
   tareget_Temperature: Cell<number>;
 };
 
-export const heaterPower = (_: heaterPowerInput): Stream<number> => {
-  return new Stream();
+export const heaterPower = (_: heaterPowerInput): Cell<number> => {
+  return new Cell(100);
 };
