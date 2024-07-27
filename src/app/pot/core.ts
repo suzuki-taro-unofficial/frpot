@@ -237,8 +237,8 @@ type shortBeep = {
 };
 
 type beepInput = {
-  s_error_temperature_too_hight: Stream<boolean>;
-  s_error_temperature_not_increased: Stream<boolean>;
+  s_errorTemperatureTooHight: Stream<Unit>;
+  s_errorTemperatureNotIncreased: Stream<Unit>;
   s_timer: Stream<Unit>;
   s_mode: Stream<Mode>;
   s_bottunClicked: Stream<Unit>;
@@ -276,7 +276,7 @@ export const hotWaterSupply = (_: hotWaterSupplyInput): Cell<boolean> => {
 //熱量ストリーム
 type heaterPowerInput = {
   s_waterLevelSensor: Stream<WaterLevel>;
-  tareget_Temperature: Cell<number>;
+  c_taregetTemperature: Cell<number>;
 };
 
 export const heaterPower = (_: heaterPowerInput): Cell<number> => {
