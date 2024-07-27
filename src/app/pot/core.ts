@@ -84,7 +84,7 @@ export const core = ({
       s_waterOverflowSensor,
       s_errorTemperatureTooHigh,
       s_errorTemperatureNotIncreased,
-    }),
+    }).hold("Stop"),
   );
 
   const c_heaterPower = heaterPower({
