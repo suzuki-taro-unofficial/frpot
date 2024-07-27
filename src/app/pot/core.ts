@@ -25,7 +25,7 @@ type Output = {
   c_mode: Cell<any>;
   c_timer: Cell<number>;
   c_temperature: Cell<number>;
-  c_waterLevel: Cell<0 | 1 | 2 | 3 | 4>;
+  c_waterLevel: Cell<WaterLevel>;
   c_warmLevel: Cell<number>;
 };
 
@@ -86,7 +86,7 @@ type ModeInput = {
   s_voilButtonClicked: Stream<Unit>;
   s_cover: Stream<Unit>;
   s_waterOverflowSensor: Stream<boolean>;
-  s_waterLevelSensor: Stream<0 | 1 | 2 | 3 | 4>;
+  s_waterLevelSensor: Stream<WaterLevel>;
   s_errorTemperatureNotIncreased: Stream<Unit>;
   s_errorTemperatureTooHigh: Stream<Unit>;
 };

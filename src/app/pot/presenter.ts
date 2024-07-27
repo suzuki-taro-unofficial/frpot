@@ -1,11 +1,13 @@
 import { Cell } from "sodiumjs";
+import { WaterLevel } from "@/app/types";
 
 type Input = {
   // TODO: 型を決める
   c_mode: Cell<any>;
   c_warmLevel: Cell<any>;
   c_temperature: Cell<number>;
-  c_waterLevel: Cell<0 | 1 | 2 | 3 | 4>;
+  c_waterLevel: Cell<WaterLevel>;
+  c_timer: Cell<number>;
 };
 
 type Output = {
@@ -15,7 +17,7 @@ type Output = {
   c_isLitWarmSavingsLamp: Cell<boolean>;
   c_isLitWarmMilkLamp: Cell<boolean>;
   c_temperatureLCD: Cell<string>;
-  c_waterLevelMeter: Cell<0 | 1 | 2 | 3 | 4>;
+  c_waterLevelMeter: Cell<WaterLevel>;
   c_timerLCD: Cell<string>;
 };
 
@@ -24,6 +26,7 @@ export const presenter = ({
   c_warmLevel,
   c_temperature,
   c_waterLevel,
+  c_timer,
 }: Input): Output => {
   return {
     c_isLitVoilingModeLamp: c_mode.map((mode) => mode === "VOILING"),
@@ -31,6 +34,8 @@ export const presenter = ({
     c_isLitWarmHighLamp: c_warmLevel.map((level) => level === "HIGH"),
     c_isLitWarmSavingsLamp: c_warmLevel.map((level) => level === "SAVING"),
     c_isLitWarmMilkLamp: c_warmLevel.map((level) => level === "MILK"),
-    c_waterLevelMeter: c_warmLevel,
+    c_temperatureLCD: c_temperature.map((temp) => temp.toString()),
+    c_timerLCD: c_timer.map((t) => t.toString()),
+    c_waterLevelMeter: c_waterLevel,
   };
 };
