@@ -27,7 +27,6 @@ export const simulator = ({
   const capacity = 2000;
   const actualCapacity = capacity + 200;
   const emitPerSec = 10;
-  const secsPerTick = 1 / 60;
 
   const c_prevTime = s_tick.hold(Date.now());
 
@@ -47,6 +46,7 @@ export const simulator = ({
           );
         },
       )
+      .filter((new_amount) => new_amount <= actualCapacity)
       .hold(0),
   );
 
