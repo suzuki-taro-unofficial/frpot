@@ -9,12 +9,12 @@ type Input = {
   s_temperatureSensor: Stream<number>;
   s_waterLevelSensor: Stream<WaterLevel>;
   s_waterOverflowSensor: Stream<boolean>;
+  s_lidStateSensor: Stream<LidState>;
   // from ui
   s_voilButtonClicked: Stream<Unit>;
   s_timerButtonClicked: Stream<Unit>;
   s_warmingConfigButtonClicked: Stream<Unit>;
   s_lockButtonClicked: Stream<Unit>;
-  s_lid: Stream<LidState>;
   c_hotWarterSupplyButtonPushing: Cell<boolean>;
 };
 
@@ -31,7 +31,7 @@ type Output = {
   c_lock: Cell<boolean>;
 };
 
-export const core = ({}: Input): Output => {
+export const core = ({ }: Input): Output => {
   return {
     // for simulator
     c_heaterPower: new Cell(0),
@@ -44,99 +44,6 @@ export const core = ({}: Input): Output => {
     c_timer: new Cell(0),
     c_lock: new Cell(true),
   };
-};
-
-type TargetTemperatureInput = {
-  c_status: Cell<Status>;
-  c_warmLevel: Cell<KeepWarmMode>;
-};
-
-export const target_temperature = ({
-  c_status,
-  c_warmLevel,
-}: TargetTemperatureInput): Cell<number> => {
-  return c_status.lift(c_warmLevel, (status, warmLevel): number => {
-    switch (status) {
-      case "Boil":
-        return 100;
-      case "KeepWarm":
-        switch (warmLevel) {
-          case "High":
-            return 98;
-          case "Economy":
-            return 90;
-          case "Milk":
-            return 60;
-        }
-      case "Stop":
-        return 0; // TODO: 適切な温度は？
-    }
-  });
-};
-
-type ErrorTemperatureNotIncreasedInput = {
-  s_tick: Stream<number>;
-  s_temperature: Stream<number>;
-  c_status: Cell<Status>;
-  c_warmLevel: Cell<KeepWarmMode>;
-};
-
-// FIXME: 壊れた実装かもしれない
-export const error_temperature_not_increased = ({
-  s_tick,
-  s_temperature,
-  c_status,
-  c_warmLevel,
-}: ErrorTemperatureNotIncreasedInput): Stream<Unit> => {
-  return Transaction.run(() => {
-    const c_prevTime = new CellLoop<number>();
-    const s_oneMinutesPassed = s_tick
-      .snapshot(c_prevTime, (currTime, prevTime) => {
-        if (currTime - prevTime >= 60 * 1000) {
-          return currTime;
-        } else {
-          return null;
-        }
-      })
-      .filterNotNull() as Stream<number>;
-    c_prevTime.loop(s_oneMinutesPassed.hold(Date.now()));
-
-    const c_targetTemp = target_temperature({ c_status, c_warmLevel });
-    const c_currTemp = s_temperature.hold(0);
-    const c_prevTemp = s_oneMinutesPassed
-      .snapshot(c_currTemp, (_, temp) => temp)
-      .hold(0);
-
-    return s_tick
-      .snapshot4(
-        c_currTemp,
-        c_prevTemp,
-        c_targetTemp,
-        (_, currTemp, prevTemp, targetTemp) => {
-          return currTemp - 5 <= targetTemp && prevTemp > currTemp;
-        },
-      )
-      .filter((cond) => {
-        return cond;
-      })
-      .mapTo(new Unit());
-  });
-};
-
-type ErrorTemperatureTooHighInput = {
-  s_temperature: Stream<number>;
-};
-
-export const error_temperature_too_hight = ({
-  s_temperature,
-}: ErrorTemperatureTooHighInput): Stream<Unit> => {
-  return s_temperature
-    .filter((temp) => {
-      return temp > 110;
-    })
-    .map((_) => {
-      return new Unit();
-    });
 };
 
 type StatusInput = {
@@ -185,56 +92,78 @@ type StatusInput = {
 const failure_status = (inputs: StatusInput): Cell<boolean> => {
   const c_highTemperatureError = new CellLoop<boolean>();
   c_highTemperatureError.loop(
-    inputs
-      .s_errorTemperatureTooHigh
+    inputs.s_errorTemperatureTooHigh
       .mapTo(true)
-      .orElse(inputs.s_temperatureSensor.filter((temp) => temp <= 90).mapTo(false))
-      .hold(false)
+      .orElse(
+        inputs.s_temperatureSensor.filter((temp) => temp <= 90).mapTo(false),
+      )
+      .hold(false),
   );
-  const c_temperatureNotIncreasedError = inputs.s_errorTemperatureNotIncreased.mapTo(true).hold(false);
+  const c_temperatureNotIncreasedError = inputs.s_errorTemperatureNotIncreased
+    .mapTo(true)
+    .hold(false);
   const c_lidOpened = inputs.s_lid.map((lid) => lid === "Open").hold(true);
   const c_waterOverflow = inputs.s_waterOverflowSensor.hold(false);
-  const c_waterLevelIsLow = inputs.s_waterLevelSensor.hold(0).map((level) => level === 0);
-  return c_highTemperatureError.lift5(c_temperatureNotIncreasedError, c_lidOpened, c_waterOverflow, c_waterLevelIsLow, (highTemp, notIncreased, lid, overflow, low) => {
-    return highTemp || notIncreased || lid || overflow || low;
-  });
-}
+  const c_waterLevelIsLow = inputs.s_waterLevelSensor
+    .hold(0)
+    .map((level) => level === 0);
+  return c_highTemperatureError.lift5(
+    c_temperatureNotIncreasedError,
+    c_lidOpened,
+    c_waterOverflow,
+    c_waterLevelIsLow,
+    (highTemp, notIncreased, lid, overflow, low) => {
+      return highTemp || notIncreased || lid || overflow || low;
+    },
+  );
+};
 
 // 保温状態に入るタイミングを監視する
 const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
+  // 100度未満の状態->100度以上の状態になった時刻を持つ
+  // その時刻から3分経ってない状態->3分経過した状態になったとき、戻り値のストリームを発火する
   const c_temperature = inputs.s_temperatureSensor.hold(0);
-  // 100度に達した時刻を持つセル。かつ、c_100degreeTimeが3分以内の場合は更新しない
-  const c_100degreeTime = new CellLoop<number>();
-  c_100degreeTime.loop(inputs
-    .s_tick
-    .snapshot(c_temperature, (time, temp) => {return {time: time, temp: temp}})
-    .filter(({time, temp}) => temp >= 100 && time - c_100degreeTime.sample() >= 3 * 60 * 1000)
-    .map(({time}) => time)
-    .hold(0)
-  )
-  const s_3minutesPassed = inputs
-    .s_tick
-    .snapshot(c_100degreeTime, (time, degreeTime) => time - degreeTime)
-    .filter((time) => time >= 3 * 60 * 1000);
-  return s_3minutesPassed.mapTo(new Unit());
-}
+  const c_time = inputs.s_tick.hold(0);
+  const c_100DegreeTime = inputs.s_temperatureSensor
+    .snapshot(c_temperature, (newTemp, oldTemp) => {
+      return { newTemp: newTemp, oldTemp: oldTemp };
+    })
+    .filter(({ newTemp, oldTemp }) => oldTemp < 100 && newTemp >= 100)
+    .snapshot(c_time, (_, time) => time)
+    .hold(0);
+  const c_3MinutesPassed = inputs.s_tick
+    .snapshot3<number, number, boolean>(
+      c_time,
+      c_100DegreeTime,
+      (currTime, prevTime, degreeTime) => {
+        const targetTime = degreeTime + 3 * 60 * 1000;
+        return prevTime < targetTime && currTime >= targetTime;
+      },
+    )
+    .filter((cond) => cond)
+    .mapTo(new Unit());
+  return c_3MinutesPassed;
+};
 
 export const status = (inputs: StatusInput): Cell<Status> => {
-  const c_failure = failure_status(inputs);
-  const s_keepWarm = keep_worm_status(inputs);
-  const c_status = new CellLoop<Status>();
-  c_status.loop(
-    inputs
-      .s_boilButtonClicked
-      .mapTo<Status>("Boil")
-      .orElse(inputs.s_lid.filter((lid) => lid === "Close").mapTo<Status>("Boil"))
-      .orElse(s_keepWarm.mapTo<Status>("KeepWarm"))
-      .snapshot<boolean, Status>(c_failure, (newStatus, failure) => {
-        return failure ? "Stop" : newStatus;
-      })
-      .hold("Stop")
+  return Transaction.run(() => {
+    const c_failure = failure_status(inputs);
+    const s_keepWarm = keep_worm_status(inputs);
+    const c_status = new CellLoop<Status>();
+    c_status.loop(
+      inputs.s_boilButtonClicked
+        .mapTo<Status>("Boil")
+        .orElse(
+          inputs.s_lid.filter((lid) => lid === "Close").mapTo<Status>("Boil"),
+        )
+        .orElse(s_keepWarm.mapTo<Status>("KeepWarm"))
+        .snapshot<boolean, Status>(c_failure, (newStatus, failure) => {
+          return failure ? "Stop" : newStatus;
+        })
+        .hold("Stop"),
     );
-  return c_status;
+    return c_status;
+  });
 };
 
 type KeepWarmModeInput = {
@@ -260,44 +189,6 @@ export const keep_warm_mode = (
   });
   warm_level.loop(new_phase.hold("High"));
   return warm_level;
-};
-
-type TimerInput = {
-  s_timerButtonClicked: Stream<Unit>;
-  s_tick: Stream<number>;
-};
-
-type TimerOutput = {
-  c_remainigTime: Cell<number>; // 単位は分
-  s_beep: Stream<Unit>;
-};
-
-export const timer = (inputs: TimerInput): TimerOutput => {
-  return Transaction.run(() => {
-    const c_previousTime = inputs.s_tick.hold(0);
-    // 経過時間はマイナスの値を持つ
-    const s_erapsed = inputs.s_tick.snapshot<number, number>(
-      c_previousTime,
-      (newTime, prevTime) => prevTime - newTime,
-    );
-    const s_add = inputs.s_timerButtonClicked.mapTo(60 * 1000);
-    const c_remainigTime = new CellLoop<number>();
-    const s_newTime = s_erapsed
-      .merge(s_add, (a, b) => a + b)
-      .snapshot(c_remainigTime, (delta, remaining) => {
-        return Math.max(0, remaining - delta);
-      });
-    c_remainigTime.loop(s_newTime.hold(0));
-    const s_beep = s_newTime
-      .filter((time) => time === 0) // 残り時間が0かつ
-      .snapshot(c_remainigTime, (_, time) => time)
-      .filter((time) => time > 0) // 一つ前の論理的時刻の残り時間が0でない時
-      .mapTo(new Unit());
-    return {
-      c_remainigTime: c_remainigTime.map((time) => time / 1000 / 60),
-      s_beep: s_beep,
-    };
-  });
 };
 
 //ボタンのクリックのストリームを一つにまとめる
@@ -370,11 +261,13 @@ export const lockState = ({
 }: lockStateInput): Cell<boolean> => {
   return Transaction.run(() => {
     const c_lockState = new CellLoop<boolean>();
-    c_lockState.loop(s_lockButtonClicked
-      .snapshot(c_lockState, (_, lockState) => {
-        return !lockState;
-      })
-      .hold(true));
+    c_lockState.loop(
+      s_lockButtonClicked
+        .snapshot(c_lockState, (_, lockState) => {
+          return !lockState;
+        })
+        .hold(true),
+    );
     return c_lockState;
   });
 };
@@ -400,32 +293,4 @@ export const hotWaterSupply = ({
       },
     )
     .hold(false);
-};
-
-//熱量ストリーム
-type heaterPowerInput = {
-  s_waterLevelSensor: Stream<WaterLevel>;
-  c_targetTemperature: Cell<number>;
-  c_status: Cell<Status>;
-  c_temperature: Cell<number>;
-};
-
-export const heaterPower = ({s_waterLevelSensor, c_targetTemperature, c_status, c_temperature}: heaterPowerInput): Cell<number> => {
-  return s_waterLevelSensor.snapshot4(c_targetTemperature, c_status, c_temperature, (waterLevel, targetTemperature, status, temperature) => {
-    switch(status){
-      case "Boil": return 100;
-      case "KeepWarm":{
-        if((targetTemperature - temperature) < 0) return 0;
-        switch(waterLevel){
-          case 0: return 0;
-          case 1: return (targetTemperature - temperature)**2 / 4;
-          case 2: return (targetTemperature - temperature)**2 / 2;
-          case 3: return (targetTemperature - temperature)**2 * 3 / 4;
-          case 4: return (targetTemperature - temperature)**2;
-          default: return 0;
-        }
-      }
-      case "Stop": return 0;
-    }
-  })
 };

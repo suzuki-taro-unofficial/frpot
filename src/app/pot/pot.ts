@@ -1,7 +1,7 @@
 import { core } from "@/app/pot/core";
 import { Cell, Stream, Unit } from "sodiumjs";
 import { presenter } from "./presenter";
-import { WaterLevel } from "../types";
+import { LidState, WaterLevel } from "../types";
 
 type Input = {
   // from root
@@ -10,6 +10,7 @@ type Input = {
   s_temperatureSensor: Stream<number>;
   s_waterLevelSensor: Stream<0 | 1 | 2 | 3 | 4>;
   s_waterOverflowSensor: Stream<boolean>;
+  s_lidStateSensor: Stream<LidState>;
   // from ui
   s_voilButtonClicked: Stream<Unit>;
   s_timerButtonClicked: Stream<Unit>;
