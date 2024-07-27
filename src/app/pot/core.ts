@@ -139,7 +139,7 @@ export const error_temperature_too_hight = ({
 
 type StatusInput = {
   s_temperatureSensor: Stream<number>;
-  s_voilButtonClicked: Stream<Unit>;
+  s_boilButtonClicked: Stream<Unit>;
   s_lid: Stream<LidState>;
   s_waterOverflowSensor: Stream<boolean>;
   s_waterLevelSensor: Stream<WaterLevel>;
@@ -148,40 +148,76 @@ type StatusInput = {
   s_tick: Stream<number>;
 };
 
+/*
+# statusについて
+
+## 仕様
+- 沸騰ボタンを押したとき、温度制御可能な水位ならば沸騰状態になる
+- ふたが閉じられたとき、温度制御可能な水位ならば沸騰状態になる
+- 沸騰状態で100度に達してから3分間経ったら、保温状態に入る
+  - => 目標温度は98度なので、単に100度以上の状態が3分間続くという条件では上手く行かない
+- 高温エラー・温度上がらずエラーが出たたときには、停止状態になる
+- フタが開いたとき、停止状態になる
+- 満水センサがONのとき、停止状態になる
+
+## 停止状態からの復旧について
+- 高温エラーのとき
+  - => 低温になれば良いので、s_temperatureSensorが一定値以下になったら復旧
+- 温度上がらずエラーのとき
+  - => 復旧しない
+- フタが開いたとき
+  - => フタが閉まれば復旧。同時に沸騰状態へ移行
+- 満水センサがONのとき
+  - => 満水センサがOFFになれば復旧。停止状態のままだけだけど、他のイベントによって沸騰状態に移行する
+- 水位が0のとき
+  - => 水位が1以上に慣れば復旧。停止状態のままだけど、他のイベントによって沸騰状態に移行する
+
+## 沸騰状態・保温状態について
+- 沸騰ボタンを押したとき、または、ふたが閉じられたとき、障害状態でなければ沸騰状態になる
+- 沸騰状態で100度に達してから3分間経ったら、保温状態に入る
+- 障害状態がtrueのとき、必ず停止状態になる
+*/
+
 // statusの各種停止状態について、それぞれの停止状態の条件が復旧されたかどうかを監視する
-// 仮に障害状態と名付ける
-const blocking_boil = (inputs: StatusInput): Cell<boolean> => {
+// 障害状態と名付ける
+const failure_status = (inputs: StatusInput): Cell<boolean> => {
   return new Cell(false);
 }
 
-export const status = (inputs: StatusInput): Stream<Status> => {
-  // # statusについて
+// 保温状態に入るタイミングを監視する
+const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
+  const c_temperature = inputs.s_temperatureSensor.hold(0);
+  // 100度に達した時刻を持つセル。かつ、c_100degreeTimeが3分以内の場合は更新しない
+  const c_100degreeTime = new CellLoop<number>();
+  c_100degreeTime.loop(inputs
+    .s_tick
+    .snapshot(c_temperature, (time, temp) => {return {time: time, temp: temp}})
+    .filter(({time, temp}) => temp >= 100 && time - c_100degreeTime.sample() >= 3 * 60 * 1000)
+    .map(({time}) => time)
+    .hold(0)
+  )
+  const s_3minutesPassed = inputs
+    .s_tick
+    .snapshot(c_100degreeTime, (time, degreeTime) => time - degreeTime)
+    .filter((time) => time >= 3 * 60 * 1000);
+  return s_3minutesPassed.mapTo(new Unit());
+}
 
-  // ## 仕様
-  // - 沸騰ボタンを押したとき、温度制御可能な水位ならば沸騰状態になる
-  // - ふたが閉じられたとき、温度制御可能な水位ならば沸騰状態になる
-  // - 沸騰状態で100度に達してから3分間経ったら、保温状態に入る
-  //   - => 目標温度は98度なので、単に100度以上の状態が3分間続くという条件では上手く行かない
-  // - 高温エラー・温度上がらずエラーが出たたときには、停止状態になる
-  // - フタが開いたとき、停止状態になる
-  // - 満水センサがONのとき、停止状態になる
-
-  // ## 停止状態からの復旧について
-  // - 高温エラーのとき
-  //   - => 低温になれば良いので、s_temperatureSensorが一定値以下になったら復旧
-  // - 温度上がらずエラーのとき
-  //   - => 復旧しない
-  // - フタが開いたとき
-  //   - => フタが閉まれば復旧。同時に沸騰状態へ移行
-  // - 満水センサがONのとき
-  //   - => 満水センサがOFFになれば復旧。停止状態のままだけだけど、他のイベントによって沸騰状態に移行する
-  // - 水位が0のとき
-  //   - => 水位が1以上に慣れば復旧。停止状態のままだけど、他のイベントによって沸騰状態に移行する
-
-  // ## 沸騰状態・保温状態について
-  // - 沸騰ボタンを押したとき、または、ふたが閉じられたとき、障害状態でなければ沸騰状態になる
-  // - 沸騰状態で100度に達してから3分間経ったら、保温状態に入る
-  // - 障害状態がtrueのとき、必ず停止状態になる
+export const status = (inputs: StatusInput): Cell<Status> => {
+  const c_failure = failure_status(inputs);
+  const s_keepWarm = keep_worm_status(inputs);
+  const c_status = new CellLoop<Status>();
+  c_status.loop(
+    inputs
+      .s_boilButtonClicked
+      .mapTo<Status>("Boil")
+      .orElse(inputs.s_lid.filter((lid) => lid === "Close").mapTo<Status>("Boil"))
+      .orElse(s_keepWarm.mapTo<Status>("KeepWarm"))
+      .snapshot<boolean, Status>(c_failure, (newStatus, failure) => {
+        return failure ? "Stop" : newStatus;
+      })
+      .hold("Stop")
+    );
 };
 
 type KeepWarmModeInput = {
@@ -289,7 +325,7 @@ type beepInput = {
   s_errorTemperatureTooHight: Stream<Unit>;
   s_errorTemperatureNotIncreased: Stream<Unit>;
   s_timer: Stream<Unit>;
-  s_mode: Stream<Status>;
+  s_mode: Cell<Status>;
   s_bottunClicked: Stream<Unit>;
   s_tick: Stream<Unit>;
 };
