@@ -1,4 +1,4 @@
-import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
+import { Cell, CellLoop, Stream, Transaction, Unit } from "sodiumjs";
 import { WaterLevel } from "../types";
 import { KeepWarmMode, Mode } from "./types";
 
@@ -68,7 +68,7 @@ export const target_temperature = ({
 };
 
 type ErrorTemperatureNotIncreasedInput = {
-  s_tick: Stream<Unit>;
+  s_tick: Stream<number>;
   s_temperature: Stream<number>;
   c_mode: Cell<Mode>;
   c_warmLevel: Cell<KeepWarmMode>;
@@ -81,17 +81,39 @@ export const error_temperature_not_increased = ({
   c_mode,
   c_warmLevel,
 }: ErrorTemperatureNotIncreasedInput): Stream<Unit> => {
-  const c_targetTemp = target_temperature({ c_mode, c_warmLevel });
-  const c_prevTemp = s_temperature.hold(0);
+  return Transaction.run(() => {
+    const c_prevTime = new CellLoop<number>();
+    const s_oneMinutesPassed = s_tick
+      .snapshot(c_prevTime, (currTime, prevTime) => {
+        if (currTime - prevTime >= 60 * 1000) {
+          return currTime;
+        } else {
+          return null;
+        }
+      })
+      .filterNotNull() as Stream<number>;
+    c_prevTime.loop(s_oneMinutesPassed.hold(Date.now()));
 
-  return s_temperature
-    .snapshot3(c_prevTemp, c_targetTemp, (currTemp, prevTemp, targetTemp) => {
-      return currTemp - 5 <= targetTemp && prevTemp > currTemp;
-    })
-    .filter((cond) => {
-      return cond;
-    })
-    .mapTo(new Unit());
+    const c_targetTemp = target_temperature({ c_mode, c_warmLevel });
+    const c_currTemp = s_temperature.hold(0);
+    const c_prevTemp = s_oneMinutesPassed
+      .snapshot(c_currTemp, (_, temp) => temp)
+      .hold(0);
+
+    return s_tick
+      .snapshot4(
+        c_currTemp,
+        c_prevTemp,
+        c_targetTemp,
+        (_, currTemp, prevTemp, targetTemp) => {
+          return currTemp - 5 <= targetTemp && prevTemp > currTemp;
+        },
+      )
+      .filter((cond) => {
+        return cond;
+      })
+      .mapTo(new Unit());
+  });
 };
 
 type ErrorTemperatureTooHighInput = {
@@ -199,15 +221,21 @@ export const s_beep = (_: beepInput): Stream<beepType> => {
 };
 
 //ロック状態かどうかを保持するセル
-//const c_lockState = new CellLoop<boolean>();
-//c_lockState.loop(
-//  s_lockButtonClicked.snapshot(
-//  ).hold(true),
-//);
+//trueの時ロック状態
+const s_lockButtonClicked = new Stream<Unit>();
+
+const c_lockState = new CellLoop<boolean>();
+c_lockState.loop(
+  s_lockButtonClicked
+    .snapshot(c_lockState, (_, lockState) => {
+      return !lockState;
+    })
+    .hold(true),
+);
 
 //給湯のON/OFFを決める
 type hotWaterSupplyInput = {
-  s_tick: Stream<Unit>;
+  s_tick: Stream<number>;
   c_lockState: Cell<boolean>;
   c_hotWaterSupplyButtonPushing: Cell<boolean>;
 };
