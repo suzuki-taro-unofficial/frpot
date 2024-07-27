@@ -44,10 +44,10 @@ export const app = (s_tick: Stream<number>): ViewItem => {
   });
 
   // 出力のユーザインタフェース生成
-  const boilingModeLamp = new Lamp(potOut.c_isLitboilingModeLamp);
-  const warmingModeLamp = new Lamp(potOut.c_isLitWarmingModeLamp);
+  const boilingModeLamp = new Lamp(potOut.c_isLitBoilingLamp);
+  const warmingModeLamp = new Lamp(potOut.c_isLitWarmingLamp);
   const warmHighLamp = new Lamp(potOut.c_isLitWarmHighLamp);
-  const warmSavingLamp = new Lamp(potOut.c_isLitWarmSavingsLamp);
+  const warmSavingLamp = new Lamp(potOut.c_isLitWarmEconomyLamp);
   const warmMilkLamp = new Lamp(potOut.c_isLitWarmMilkLamp);
   const temperatureLCD = new Display(potOut.c_temperatureLCD);
   const timerLCD = new Display(potOut.c_timerLCD);
