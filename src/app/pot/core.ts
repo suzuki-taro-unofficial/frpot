@@ -1,11 +1,12 @@
 import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
+import { WaterLevel } from "../types";
 
 type Input = {
   // from root
   s_tick: Stream<Unit>;
   // from simulator
   s_temperatureSensor: Stream<number>;
-  s_waterLevelSensor: Stream<0 | 1 | 2 | 3 | 4>;
+  s_waterLevelSensor: Stream<WaterLevel>;
   s_waterOverflowSensor: Stream<boolean>;
   // from ui
   s_voilButtonClicked: Stream<Unit>;
@@ -188,11 +189,9 @@ export const hotWaterSupply = (_: hotWaterSupplyInput): Cell<boolean> => {
   return new Cell(false);
 };
 
-type WaterLevel = any; // TODO: 型を決める
-
 //熱量ストリーム
 type heaterPowerInput = {
-  s_waterLevelSencor: Stream<WaterLevel>;
+  s_waterLevelSensor: Stream<WaterLevel>;
   tareget_Temperature: Cell<number>;
 };
 

@@ -1,4 +1,5 @@
 import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
+import { WaterLevel } from "./types";
 
 // TODO:
 // 水量や熱量などの単位をどうするか
@@ -10,8 +11,6 @@ type Input = {
   c_heaterPower: Cell<number>; // ヒーターの熱量で単位はW
   c_hotWaterSupply: Cell<boolean>;
 };
-
-type WaterLevel = 0 | 1 | 2 | 3 | 4;
 
 type Output = {
   s_temperatureSensor: Stream<number>;
