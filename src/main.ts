@@ -3,9 +3,10 @@ import "./style.css";
 import { StreamSink, Unit } from "sodiumjs";
 
 const main = () => {
-  const ssink_tick = new StreamSink<Unit>();
+  const ssink_tick = new StreamSink<number>();
+
   setInterval(() => {
-    ssink_tick.send(Unit.UNIT);
+    ssink_tick.send(Date.now());
   }, 200);
 
   const root = app(ssink_tick);

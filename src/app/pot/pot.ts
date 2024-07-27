@@ -4,7 +4,7 @@ import { presenter } from "./presenter";
 
 type Input = {
   // from root
-  s_tick: Stream<Unit>;
+  s_tick: Stream<number>;
   // from simulator
   s_temperatureSensor: Stream<number>;
   s_waterLevelSensor: Stream<0 | 1 | 2 | 3 | 4>;

@@ -4,7 +4,7 @@ import { KeepWarmMode, Mode } from "./types";
 
 type Input = {
   // from root
-  s_tick: Stream<Unit>;
+  s_tick: Stream<number>;
   // from simulator
   s_temperatureSensor: Stream<number>;
   s_waterLevelSensor: Stream<WaterLevel>;
