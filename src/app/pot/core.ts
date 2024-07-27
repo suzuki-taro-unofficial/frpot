@@ -197,9 +197,14 @@ export const timer = (inputs: TimerInput): TimerOutput => {
         return Math.max(0, remaining - delta);
       });
     c_remainigTime.loop(s_newTime.hold(0));
+    const s_beep = s_newTime
+      .filter((time) => time === 0)
+      .mapTo(new Unit())
+      .snapshot(c_remainigTime, (_, time) => time)
+      .filter((time) => time > 0);
     return {
       c_remainigTime: c_remainigTime,
-      s_beep: s_newTime.filter((time) => time === 0).mapTo(new Unit()),
+      s_beep: s_beep
     };
   });
 };
