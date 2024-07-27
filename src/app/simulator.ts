@@ -53,20 +53,20 @@ export const simulator = ({
   const c_amount = new CellLoop<number>();
   c_amount.loop(
     s_tick
-      .snapshot5(
+      .snapshot6(
         c_prevTime,
         c_amount,
         c_waterIn,
         c_hotWaterSupply,
-        (currTime, prevTime, amount, in_amount, should_out) => {
+        c_lid,
+        (currTime, prevTime, amount, in_amount, should_out, lid) => {
           return (
             amount +
-            in_amount +
+            (lid == "Open" ? in_amount : 0) +
             (should_out ? -emitPerSec * ((currTime - prevTime) / 1000) : 0)
           );
         },
       )
-      .gate(c_lid.map((s) => s === "Open"))
       .map((amount) => clamp(amount, 0, actualCapacity))
       .hold(0),
   );
