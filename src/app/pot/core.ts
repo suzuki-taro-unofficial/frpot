@@ -1,5 +1,5 @@
 import { Cell, CellLoop, Stream, Transaction, Unit } from "sodiumjs";
-import { WaterLevel } from "../types";
+import { LidState, WaterLevel } from "../types";
 import { KeepWarmMode, Mode } from "./types";
 
 type Input = {
@@ -14,7 +14,7 @@ type Input = {
   s_timerButtonClicked: Stream<Unit>;
   s_warmingConfigButtonClicked: Stream<Unit>;
   s_lockButtonClicked: Stream<Unit>;
-  s_cover: Stream<Unit>;
+  s_lid: Stream<LidState>;
   c_hotWarterSupplyButtonPushing: Cell<boolean>;
 };
 
@@ -135,11 +135,12 @@ export const error_temperature_too_hight = ({
 type ModeInput = {
   s_temperatureSensor: Stream<number>;
   s_voilButtonClicked: Stream<Unit>;
-  s_cover: Stream<Unit>;
+  s_lid: Stream<LidState>;
   s_waterOverflowSensor: Stream<boolean>;
   s_waterLevelSensor: Stream<WaterLevel>;
   s_errorTemperatureNotIncreased: Stream<Unit>;
   s_errorTemperatureTooHigh: Stream<Unit>;
+  s_tick: Stream<number>;
 };
 
 export const mode = (_: ModeInput): Stream<Mode> => {
