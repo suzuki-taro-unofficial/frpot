@@ -204,7 +204,7 @@ export const timer = (inputs: TimerInput): TimerOutput => {
       .mapTo(new Unit());
     return {
       c_remainigTime: c_remainigTime.map((time) => time / 1000 / 60),
-      s_beep: s_beep
+      s_beep: s_beep,
     };
   });
 };
@@ -218,8 +218,19 @@ type buttonClickedInput = {
   s_hotWaterSupplyButtonClicked: Stream<Unit>;
 };
 
-export const s_buttonClicked = (_: buttonClickedInput): Stream<Unit> => {
-  return new Stream();
+export const buttonClicked = ({
+  s_voilButtonClicked,
+  s_timerButtonClicked,
+  s_warmingConfigButtonClicked,
+  s_lockButtonClicked,
+  s_hotWaterSupplyButtonClicked,
+}: buttonClickedInput): Stream<Unit> => {
+  return s_voilButtonClicked
+    .mapTo(new Unit())
+    .orElse(s_timerButtonClicked.mapTo(new Unit()))
+    .orElse(s_warmingConfigButtonClicked.mapTo(new Unit()))
+    .orElse(s_lockButtonClicked.mapTo(new Unit()))
+    .orElse(s_hotWaterSupplyButtonClicked.mapTo(new Unit()));
 };
 
 //ビープストリーム
@@ -258,9 +269,11 @@ type lockStateInput = {
 export const lockState = (s_lockButtonClicked): Cell<boolean> => {
   return Transaction.run(() => {
     const c_lockState = new CellLoop<boolean>();
-    c_lockButtonClicked.snapshot(c_lockState, (_, lockState) => {
-      return !lockState;
-    }).hold(true),
+    c_lockButtonClicked
+      .snapshot(c_lockState, (_, lockState) => {
+        return !lockState;
+      })
+      .hold(true);
   });
 };
 
@@ -271,10 +284,18 @@ type hotWaterSupplyInput = {
   c_hotWaterSupplyButtonPushing: Cell<boolean>;
 };
 
-export const hotWaterSupply = ({s_tick, c_lockState, c_hotWaterSupplyButtonPushing}): Cell<boolean> => {
-  return s_tick.snapshot3(c_lockState, c_hotWaterSupplyButtonPushing, (_, lockState, hotWaterSupplyButtonPushing) => {
-    return lockState && hotWaterSupplyButtonPushing;
-  });
+export const hotWaterSupply = ({
+  s_tick,
+  c_lockState,
+  c_hotWaterSupplyButtonPushing,
+}): Cell<boolean> => {
+  return s_tick.snapshot3(
+    c_lockState,
+    c_hotWaterSupplyButtonPushing,
+    (_, lockState, hotWaterSupplyButtonPushing) => {
+      return lockState && hotWaterSupplyButtonPushing;
+    },
+  );
 };
 
 //熱量ストリーム
