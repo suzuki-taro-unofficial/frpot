@@ -30,7 +30,7 @@ type Output = {
   c_keepWarmMode: Cell<KeepWarmMode>;
 };
 
-export const core = ({ }: Input): Output => {
+export const core = ({}: Input): Output => {
   return {
     // for simulator
     c_heaterPower: new Cell(0),
