@@ -7,6 +7,8 @@ import { Button, Display, HStack, Lamp, Meter, VStack } from "@/components";
 export const app = (s_tick: Stream<number>): ViewItem => {
   // 入力のユーザインタフェース生成
   const waterInButton = new Button("水追加");
+  const lidButtun = new Button("ふた");
+
   const voilButton = new Button("沸騰");
   const timerButton = new Button("タイマー");
   const warmingConfigButton = new Button("保温設定");
@@ -56,6 +58,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
 
   // ユーザインタフェースの構築
   return new HStack(
+    new VStack(waterInButton, lidButtun),
     new VStack(voilButton, timerButton, timerLCD),
     new VStack(
       new HStack(boilingModeLamp, warmingModeLamp),
