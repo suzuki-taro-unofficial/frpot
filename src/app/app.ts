@@ -2,9 +2,9 @@ import Button from "@/components/button";
 import { ViewItem } from "@/components/viewItem";
 import { simulator } from "./simulator";
 import { pot } from "./pot/pot";
-import { CellLoop, Stream, Unit } from "sodiumjs";
+import { CellLoop, Stream } from "sodiumjs";
 
-export const app = (s_tick: Stream<Unit>): ViewItem => {
+export const app = (s_tick: Stream<number>): ViewItem => {
   const waterInButton = new Button("水追加");
 
   const cloop_heaterPower = new CellLoop<number>();
