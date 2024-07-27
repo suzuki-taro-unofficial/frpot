@@ -52,7 +52,6 @@ export class Meter implements ViewItem<HTMLDivElement> {
   }
 
   private changeMeter(level: 0 | 1 | 2 | 3 | 4) {
-    console.log(level);
     level >= 1
       ? this.meterLevel1.classList.add(meterLevelLitStyle)
       : this.meterLevel1.classList.remove(meterLevelLitStyle);
