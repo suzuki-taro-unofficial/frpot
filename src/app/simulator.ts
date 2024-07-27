@@ -64,9 +64,15 @@ export const simulator = ({
         c_heaterPower,
         (currTime, prevTime, temp, amount, power) => {
           const joule = power * (currTime - prevTime);
-          return temp + joule / 4.2 / amount;
+          if (amount <= 10) {
+            // 水の量が極端に少ないなら異常加熱
+            return { cond: true, temp: temp + joule }; // TODO: 良い感じの温度変化
+          } else {
+            return { cond: false, temp: temp + joule / 4.2 / amount };
+          }
         },
       )
+      .map(({ cond, temp }) => (cond ? temp : temp > 100 ? 100 : temp))
       .hold(0),
   );
 
