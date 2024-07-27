@@ -274,7 +274,6 @@ export const buttonClicked = ({
 };
 
 //ビープストリーム
-
 //beepの実装は検討中
 type beepType = longBeep | shortBeep;
 
@@ -359,10 +358,10 @@ export const heaterPower = ({s_waterLevelSensor, c_targetTemperature, c_status, 
         if((targetTemperature - temperature) < 0) return 0;
         switch(waterLevel){
           case 0: return 0;
-          case 1: return (targetTemperature - temperature) / 4;
-          case 2: return (targetTemperature - temperature) / 2;
-          case 3: return (targetTemperature - temperature) * 3 / 4;
-          case 4: return (targetTemperature - temperature);
+          case 1: return (targetTemperature - temperature)**2 / 4;
+          case 2: return (targetTemperature - temperature)**2 / 2;
+          case 3: return (targetTemperature - temperature)**2 * 3 / 4;
+          case 4: return (targetTemperature - temperature)**2;
           default: return 0;
         }
       }
