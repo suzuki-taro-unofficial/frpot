@@ -33,7 +33,7 @@ export const timer = (inputs: TimerInput): TimerOutput => {
       .filter(({ newTime, remaining }) => newTime === 0 && remaining > 0) // 残り時間が0になった最初の論理的時刻のみ通す
       .mapTo(new Unit());
     return {
-      c_remainigTime: c_remainigTime.map((time) => time / 1000 / 60),
+      c_remainigTime: c_remainigTime.map((time) => Math.floor(time / 1000 / 60)),
       s_beep: s_beep,
     };
   });
