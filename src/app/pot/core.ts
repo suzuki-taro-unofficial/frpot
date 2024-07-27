@@ -35,7 +35,7 @@ export const core = ({}: Input): Output => {
 
 type TargetTemperatureInput = {
   c_mode: Cell<Mode>;
-  c_warmLevel: Cell<WaterLevel>;
+  c_warmLevel: Cell<KeepWarmMode>;
 };
 
 type ErrorTemperatureNotIncreasedInput = {
