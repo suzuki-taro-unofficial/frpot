@@ -22,6 +22,11 @@ type Output = {
   c_heaterPower: Cell<number>;
   c_hotWaterSuply: Cell<boolean>;
   // for presenter
+  c_mode: Cell<any>;
+  c_timer: Cell<number>;
+  c_temperature: Cell<number>;
+  c_waterLevel: Cell<WaterLevel>;
+  c_warmLevel: Cell<number>;
 };
 
 export const core = ({}: Input): Output => {
