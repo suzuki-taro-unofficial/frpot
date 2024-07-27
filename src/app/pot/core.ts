@@ -288,7 +288,7 @@ export const hotWaterSupply = ({
   s_tick,
   c_lockState,
   c_hotWaterSupplyButtonPushing,
-}): Cell<boolean> => {
+}: hotWaterSupplyInput): Cell<boolean> => {
   return s_tick.snapshot3(
     c_lockState,
     c_hotWaterSupplyButtonPushing,
