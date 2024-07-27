@@ -112,14 +112,14 @@ export const status = (inputs: StatusInput): Stream<Status> => {
         inputs.s_lid.filter((lid) => lid === "Close").mapTo<Status>("Boil"),
       )
       .orElse(s_keepWarm.mapTo<Status>("KeepWarm"))
-      .snapshot<boolean, Status>(c_failure, (newStatus, failure) => {
-        return failure ? "Stop" : newStatus;
+      .snapshot3(c_status, c_failure, (newStatus, prevStatus, failure) => {
+        return {
+          newStatus: failure ? "Stop" : newStatus,
+          prevStatus: prevStatus,
+        };
       })
-      .snapshot(c_status, (newStatus, prevStatus) => {
-        return {prevStatus: prevStatus, newStatus: newStatus};
-      })
-      .filter(({prevStatus, newStatus}) => prevStatus !== newStatus)
-      .map(({newStatus}) => newStatus)
+      .filter(({ prevStatus, newStatus }) => prevStatus !== newStatus)
+      .map(({ newStatus }) => newStatus);
     c_status.loop(s_new_status.hold("Stop"));
     return s_new_status;
   });
