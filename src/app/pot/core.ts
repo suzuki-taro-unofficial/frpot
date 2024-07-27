@@ -63,11 +63,15 @@ export const core = ({
   const cloop_status = new CellLoop<Status>();
   const c_status: Cell<Status> = cloop_status;
 
+  const c_targetTemperature = target_temperature({
+    c_status,
+    c_warmLevel,
+  });
+
   const s_errorTemperatureNotIncreased = error_temperature_not_increased({
     s_tick,
     s_temperature: s_temperatureSensor,
-    c_warmLevel,
-    c_status,
+    c_targetTemp: c_targetTemperature,
   });
 
   cloop_status.loop(
@@ -82,11 +86,6 @@ export const core = ({
       s_errorTemperatureNotIncreased,
     }),
   );
-
-  const c_targetTemperature = target_temperature({
-    c_status,
-    c_warmLevel,
-  });
 
   const c_heaterPower = heaterPower({
     s_waterLevelSensor,
