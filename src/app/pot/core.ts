@@ -311,11 +311,12 @@ export const lockState = ({
 }: lockStateInput): Cell<boolean> => {
   return Transaction.run(() => {
     const c_lockState = new CellLoop<boolean>();
-    s_lockButtonClicked
+    c_lockState.loop(s_lockButtonClicked
       .snapshot(c_lockState, (_, lockState) => {
         return !lockState;
       })
-      .hold(true);
+      .hold(true));
+    return c_lockState;
   });
 };
 
