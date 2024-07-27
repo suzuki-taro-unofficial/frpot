@@ -20,6 +20,16 @@ type Output = {
   s_lidStateSensor: Stream<LidState>;
 };
 
+const clamp = (v: number, l: number, r: number): number => {
+  if (v < l) {
+    return l;
+  } else if (v > r) {
+    return r;
+  } else {
+    return v;
+  }
+};
+
 export const simulator = ({
   c_waterIn,
   s_lid,
@@ -29,7 +39,7 @@ export const simulator = ({
 }: Input): Output => {
   const capacity = 2000;
   const actualCapacity = capacity + 200;
-  const emitPerSec = 10;
+  const emitPerSec = 100;
 
   const c_prevTime = s_tick.hold(Date.now());
 
@@ -49,9 +59,11 @@ export const simulator = ({
           );
         },
       )
-      .filter((new_amount) => new_amount <= actualCapacity && new_amount >= 0)
+      .map((amount) => clamp(amount, 0, actualCapacity))
       .hold(0),
   );
+
+  c_amount.listen((amount) => console.log("amount ", amount));
 
   // 現在の水の温度で単位は°C
   const c_temp = new CellLoop<number>();
