@@ -1,4 +1,4 @@
-import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
+import { Cell, CellLoop, Stream } from "sodiumjs";
 import { WaterLevel } from "./types";
 
 // TODO:
