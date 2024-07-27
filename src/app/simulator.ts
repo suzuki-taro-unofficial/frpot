@@ -29,16 +29,21 @@ export const simulator = ({
   const emitPerSec = 10;
   const secsPerTick = 1 / 60;
 
+  const c_prevTime = s_tick.hold(Date.now());
+
   const c_amount = new CellLoop<number>();
   c_amount.loop(
     s_tick
-      .snapshot4(
+      .snapshot5(
+        c_prevTime,
         c_amount,
         c_waterIn,
         c_hotWaterSupply,
-        (_u, amount, in_amount, should_out) => {
+        (currTime, prevTime, amount, in_amount, should_out) => {
           return (
-            amount + in_amount + (should_out ? -emitPerSec * secsPerTick : 0)
+            amount +
+            in_amount +
+            (should_out ? -emitPerSec * (currTime - prevTime) : 0)
           );
         },
       )
@@ -49,10 +54,16 @@ export const simulator = ({
   const c_temp = new CellLoop<number>();
   c_temp.loop(
     s_tick
-      .snapshot4(c_temp, c_amount, c_heaterPower, (_, temp, amount, power) => {
-        const joule = power * secsPerTick;
-        return temp + joule / 4.2 / amount;
-      })
+      .snapshot5(
+        c_prevTime,
+        c_temp,
+        c_amount,
+        c_heaterPower,
+        (currTime, prevTime, temp, amount, power) => {
+          const joule = power * (currTime - prevTime);
+          return temp + joule / 4.2 / amount;
+        },
+      )
       .hold(0),
   );
 
