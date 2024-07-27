@@ -1,5 +1,5 @@
-import { Cell, CellLoop, Stream } from "sodiumjs";
-import { WaterLevel } from "./types";
+import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
+import { LidState, WaterLevel } from "./types";
 
 // TODO:
 // 水量や熱量などの単位をどうするか
@@ -10,16 +10,19 @@ type Input = {
   s_tick: Stream<number>;
   c_heaterPower: Cell<number>; // ヒーターの熱量で単位はW
   c_hotWaterSupply: Cell<boolean>;
+  s_lid: Stream<Unit>;
 };
 
 type Output = {
   s_temperatureSensor: Stream<number>;
   s_waterLevelSensor: Stream<WaterLevel>;
   s_waterOverflowSensor: Stream<boolean>;
+  s_lidStateSensor: Stream<LidState>;
 };
 
 export const simulator = ({
   c_waterIn,
+  s_lid,
   s_tick,
   c_heaterPower,
   c_hotWaterSupply,
@@ -61,9 +64,15 @@ export const simulator = ({
         c_heaterPower,
         (currTime, prevTime, temp, amount, power) => {
           const joule = power * (currTime - prevTime);
-          return temp + joule / 4.2 / amount;
+          if (amount <= 10) {
+            // 水の量が極端に少ないなら異常加熱
+            return { cond: true, temp: temp + joule }; // TODO: 良い感じの温度変化
+          } else {
+            return { cond: false, temp: temp + joule / 4.2 / amount };
+          }
         },
       )
+      .map(({ cond, temp }) => (cond ? temp : temp > 100 ? 100 : temp))
       .hold(0),
   );
 
@@ -92,9 +101,15 @@ export const simulator = ({
     return amount > actualCapacity;
   });
 
+  const c_lid = s_lid.accum<LidState>("Open", (state, _) =>
+    state === "Open" ? "Close" : "Open",
+  );
+  const s_lidStateSensor = s_tick.snapshot1(c_lid);
+
   return {
     s_temperatureSensor,
     s_waterLevelSensor,
     s_waterOverflowSensor,
+    s_lidStateSensor,
   };
 };

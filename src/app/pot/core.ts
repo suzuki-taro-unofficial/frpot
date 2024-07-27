@@ -9,12 +9,12 @@ type Input = {
   s_temperatureSensor: Stream<number>;
   s_waterLevelSensor: Stream<WaterLevel>;
   s_waterOverflowSensor: Stream<boolean>;
+  s_lidStateSensor: Stream<LidState>;
   // from ui
   s_voilButtonClicked: Stream<Unit>;
   s_timerButtonClicked: Stream<Unit>;
   s_warmingConfigButtonClicked: Stream<Unit>;
   s_lockButtonClicked: Stream<Unit>;
-  s_lid: Stream<LidState>;
   c_hotWarterSupplyButtonPushing: Cell<boolean>;
 };
 
@@ -185,20 +185,31 @@ type StatusInput = {
 const failure_status = (inputs: StatusInput): Cell<boolean> => {
   const c_highTemperatureError = new CellLoop<boolean>();
   c_highTemperatureError.loop(
-    inputs
-      .s_errorTemperatureTooHigh
+    inputs.s_errorTemperatureTooHigh
       .mapTo(true)
-      .orElse(inputs.s_temperatureSensor.filter((temp) => temp <= 90).mapTo(false))
-      .hold(false)
+      .orElse(
+        inputs.s_temperatureSensor.filter((temp) => temp <= 90).mapTo(false),
+      )
+      .hold(false),
   );
-  const c_temperatureNotIncreasedError = inputs.s_errorTemperatureNotIncreased.mapTo(true).hold(false);
+  const c_temperatureNotIncreasedError = inputs.s_errorTemperatureNotIncreased
+    .mapTo(true)
+    .hold(false);
   const c_lidOpened = inputs.s_lid.map((lid) => lid === "Open").hold(true);
   const c_waterOverflow = inputs.s_waterOverflowSensor.hold(false);
-  const c_waterLevelIsLow = inputs.s_waterLevelSensor.hold(0).map((level) => level === 0);
-  return c_highTemperatureError.lift5(c_temperatureNotIncreasedError, c_lidOpened, c_waterOverflow, c_waterLevelIsLow, (highTemp, notIncreased, lid, overflow, low) => {
-    return highTemp || notIncreased || lid || overflow || low;
-  });
-}
+  const c_waterLevelIsLow = inputs.s_waterLevelSensor
+    .hold(0)
+    .map((level) => level === 0);
+  return c_highTemperatureError.lift5(
+    c_temperatureNotIncreasedError,
+    c_lidOpened,
+    c_waterOverflow,
+    c_waterLevelIsLow,
+    (highTemp, notIncreased, lid, overflow, low) => {
+      return highTemp || notIncreased || lid || overflow || low;
+    },
+  );
+};
 
 // 保温状態に入るタイミングを監視する
 const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
@@ -331,7 +342,6 @@ export const buttonClicked = ({
 };
 
 //ビープストリーム
-
 //beepの実装は検討中
 type beepType = longBeep | shortBeep;
 
@@ -368,11 +378,13 @@ export const lockState = ({
 }: lockStateInput): Cell<boolean> => {
   return Transaction.run(() => {
     const c_lockState = new CellLoop<boolean>();
-    c_lockState.loop(s_lockButtonClicked
-      .snapshot(c_lockState, (_, lockState) => {
-        return !lockState;
-      })
-      .hold(true));
+    c_lockState.loop(
+      s_lockButtonClicked
+        .snapshot(c_lockState, (_, lockState) => {
+          return !lockState;
+        })
+        .hold(true),
+    );
     return c_lockState;
   });
 };
@@ -408,22 +420,42 @@ type heaterPowerInput = {
   c_temperature: Cell<number>;
 };
 
-export const heaterPower = ({s_waterLevelSensor, c_targetTemperature, c_status, c_temperature}: heaterPowerInput): Cell<number> => {
-  return s_waterLevelSensor.snapshot4(c_targetTemperature, c_status, c_temperature, (waterLevel, targetTemperature, status, temperature) => {
-    switch(status){
-      case "Boil": return 100;
-      case "KeepWarm":{
-        if((targetTemperature - temperature) < 0) return 0;
-        switch(waterLevel){
-          case 0: return 0;
-          case 1: return (targetTemperature - temperature) / 4;
-          case 2: return (targetTemperature - temperature) / 2;
-          case 3: return (targetTemperature - temperature) * 3 / 4;
-          case 4: return (targetTemperature - temperature);
-          default: return 0;
+export const heaterPower = ({
+  s_waterLevelSensor,
+  c_targetTemperature,
+  c_status,
+  c_temperature,
+}: heaterPowerInput): Cell<number> => {
+  return s_waterLevelSensor
+    .snapshot4(
+      c_targetTemperature,
+      c_status,
+      c_temperature,
+      (waterLevel, targetTemperature, status, temperature) => {
+        switch (status) {
+          case "Boil":
+            return 100;
+          case "KeepWarm": {
+            if (targetTemperature - temperature < 0) return 0;
+            switch (waterLevel) {
+              case 0:
+                return 0;
+              case 1:
+                return (targetTemperature - temperature) ** 2 / 4;
+              case 2:
+                return (targetTemperature - temperature) ** 2 / 2;
+              case 3:
+                return ((targetTemperature - temperature) ** 2 * 3) / 4;
+              case 4:
+                return (targetTemperature - temperature) ** 2;
+              default:
+                return 0;
+            }
+          }
+          case "Stop":
+            return 0;
         }
-      }
-      case "Stop": return 0;
-    }
-  })
+      },
+    )
+    .hold(0);
 };
