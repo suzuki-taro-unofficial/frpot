@@ -23,7 +23,7 @@ export const timer = (inputs: TimerInput): TimerOutput => {
     const s_newTime = s_erapsed
       .merge(s_add, (a, b) => a + b)
       .snapshot(c_remainigTime, (delta, remaining) => {
-        return Math.max(0, remaining + delta);
+        return Math.max(0, remaining + delta) % (60 * 60 * 1000); // 最大1時間
       });
     c_remainigTime.loop(s_newTime.hold(0));
     const s_beep = s_newTime
