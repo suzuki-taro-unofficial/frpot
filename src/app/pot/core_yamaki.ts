@@ -20,6 +20,7 @@ type BEEPTYPE = `Long` | `Short`;
 //ビープの種類と回数のタプル
 const beepOut: [BEEPTYPE, number];
 
+//beeoの実装は検討中
 type BeepType = LongBeep | ShortBeep;
 
 type LongBeep = {
@@ -50,7 +51,7 @@ type hotWatterSupplyInput = {
   c_hotWaterSupplyButtonPushing: Cell<boolean>;
 };
 
-export const s_hotWaterSupply = (_: hotWatterSupplyInput): Stream<boolean> => {
+export const hotWaterSupply = (_: hotWatterSupplyInput): Stream<boolean> => {
   return new Stream<false>();
 };
 
@@ -60,6 +61,6 @@ type heaterPowerInput = {
   tareget_Temperature: Cell<number>;
 };
 
-export const s_heaterPower = (_: heaterPowerInput): Stream<Number> => {
+export const heaterPower = (_: heaterPowerInput): Stream<Number> => {
   return new Stream<100>();
 };
