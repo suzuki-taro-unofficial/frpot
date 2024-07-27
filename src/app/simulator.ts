@@ -7,7 +7,7 @@ import { WaterLevel } from "./types";
 
 type Input = {
   c_waterIn: Cell<number>; // tick事に何mlの水が来るか
-  s_tick: Stream<Unit>;
+  s_tick: Stream<number>;
   c_heaterPower: Cell<number>; // ヒーターの熱量で単位はW
   c_hotWaterSupply: Cell<boolean>;
 };

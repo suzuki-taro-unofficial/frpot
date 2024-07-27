@@ -11,10 +11,10 @@ type Input = {
 };
 
 type Output = {
-  c_isLitVoilingModeLamp: Cell<boolean>;
+  c_isLitboilingModeLamp: Cell<boolean>;
   c_isLitWarmingModeLamp: Cell<boolean>;
   c_isLitWarmHighLamp: Cell<boolean>;
-  c_isLitWarmSavingsLamp: Cell<boolean>;
+  c_isLitWarmEconomyLamp: Cell<boolean>;
   c_isLitWarmMilkLamp: Cell<boolean>;
   c_temperatureLCD: Cell<string>;
   c_waterLevelMeter: Cell<WaterLevel>;
@@ -29,10 +29,10 @@ export const presenter = ({
   c_timer,
 }: Input): Output => {
   return {
-    c_isLitVoilingModeLamp: c_mode.map((mode) => mode === "Boil"),
+    c_isLitboilingModeLamp: c_mode.map((mode) => mode === "Boil"),
     c_isLitWarmingModeLamp: c_mode.map((mode) => mode === "KeepWarm"),
     c_isLitWarmHighLamp: c_keepWarmMode.map((level) => level === "High"),
-    c_isLitWarmSavingsLamp: c_keepWarmMode.map((level) => level === "Economy"),
+    c_isLitWarmEconomyLamp: c_keepWarmMode.map((level) => level === "Economy"),
     c_isLitWarmMilkLamp: c_keepWarmMode.map((level) => level === "Milk"),
     c_temperatureLCD: c_temperature.map((temp) => temp.toString()),
     c_timerLCD: c_timer.map((t) => t.toString()),
