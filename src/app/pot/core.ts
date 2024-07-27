@@ -338,16 +338,25 @@ type shortBeep = {
 };
 
 type beepInput = {
-  s_errorTemperatureTooHight: Stream<Unit>;
+  s_errorTemperatureTooHigh: Stream<Unit>;
   s_errorTemperatureNotIncreased: Stream<Unit>;
   s_timer: Stream<Unit>;
-  s_mode: Cell<Status>;
-  s_bottunClicked: Stream<Unit>;
-  s_tick: Stream<Unit>;
+  s_buttonClicked: Stream<Unit>;
+  s_boiled: Stream<Unit>;
 };
 
-export const s_beep = (_: beepInput): Stream<beepType> => {
-  return new Stream<beepType>();
+export const s_beep = ({
+  s_errorTemperatureTooHigh,
+  s_errorTemperatureNotIncreased,
+  s_timer,
+  s_buttonClicked,
+  s_boiled,
+}: beepInput): Stream<beepType> => {
+  return s_errorTemperatureNotIncreased.mapTo<beepType>({kind: "Long"})
+    .orElse(s_errorTemperatureTooHigh.mapTo<beepType>({kind: "Long"}))
+    .orElse(s_timer.mapTo<beepType>({kind: "Short", count: 3}))
+    .orElse(s_buttonClicked.mapTo<beepType>({kind: "Short", count: 1}))
+    .orElse(s_boiled.mapTo<beepType>({kind: "Short", count: 1}));
 };
 
 //ロック状態かどうかを保持するセル
