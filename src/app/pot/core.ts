@@ -23,7 +23,7 @@ type Input = {
   s_timerButtonClicked: Stream<Unit>;
   s_warmingConfigButtonClicked: Stream<Unit>;
   s_lockButtonClicked: Stream<Unit>;
-  c_hotWarterSupplyButtonPushing: Cell<boolean>;
+  c_hotWaterSupplyButtonPushing: Cell<boolean>;
 };
 
 type Output = {
@@ -49,6 +49,7 @@ export const core = ({
   s_timerButtonClicked,
   s_warmingConfigButtonClicked,
   s_lockButtonClicked,
+  c_hotWaterSupplyButtonPushing,
 }: Input): Output => {
   const c_temperature = s_temperatureSensor.hold(0);
   const c_waterLevel = s_waterLevelSensor.hold(0);
@@ -106,7 +107,11 @@ export const core = ({
   return {
     // for simulator
     c_heaterPower,
-    c_hotWaterSuply: new Cell(false),
+    c_hotWaterSuply: hotWaterSupply({
+      s_tick,
+      c_lockState: c_lock,
+      c_hotWaterSupplyButtonPushing,
+    }),
     // for presenter
     c_status,
     c_keepWarmMode: c_warmLevel,

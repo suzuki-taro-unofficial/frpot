@@ -38,7 +38,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
       s_warmingConfigButtonClicked: warmingConfigButton.s_clicked,
       s_lockButtonClicked: lockButton.s_clicked,
       s_cover: lidButton.s_clicked,
-      c_hotWarterSupplyButtonPushing: hotWaterSupplyButton.c_pushing,
+      c_hotWaterSupplyButtonPushing: hotWaterSupplyButton.c_pushing,
     });
 
     cloop_heaterPower.loop(potOut.c_heaterPower);
