@@ -183,7 +183,21 @@ type StatusInput = {
 // statusの各種停止状態について、それぞれの停止状態の条件が復旧されたかどうかを監視する
 // 障害状態と名付ける
 const failure_status = (inputs: StatusInput): Cell<boolean> => {
-  return new Cell(false);
+  const c_highTemperatureError = new CellLoop<boolean>();
+  c_highTemperatureError.loop(
+    inputs
+      .s_errorTemperatureTooHigh
+      .mapTo(true)
+      .orElse(inputs.s_temperatureSensor.filter((temp) => temp <= 90).mapTo(false))
+      .hold(false)
+  );
+  const c_temperatureNotIncreasedError = inputs.s_errorTemperatureNotIncreased.mapTo(true).hold(false);
+  const c_lidOpened = inputs.s_lid.map((lid) => lid === "Open").hold(true);
+  const c_waterOverflow = inputs.s_waterOverflowSensor.hold(false);
+  const c_waterLevelIsLow = inputs.s_waterLevelSensor.hold(0).map((level) => level === 0);
+  return c_highTemperatureError.lift5(c_temperatureNotIncreasedError, c_lidOpened, c_waterOverflow, c_waterLevelIsLow, (highTemp, notIncreased, lid, overflow, low) => {
+    return highTemp || notIncreased || lid || overflow || low;
+  });
 }
 
 // 保温状態に入るタイミングを監視する
@@ -220,6 +234,7 @@ export const status = (inputs: StatusInput): Cell<Status> => {
       })
       .hold("Stop")
     );
+  return c_status;
 };
 
 type KeepWarmModeInput = {
