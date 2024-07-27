@@ -181,15 +181,15 @@ type TimerOutput = {
   s_beep: Stream<Unit>;
 };
 
-export const timer = (input: TimerInput): TimerOutput => {
+export const timer = (inputs: TimerInput): TimerOutput => {
   return Transaction.run(() => {
-    const c_previousTime = new CellLoop<number>();
-    c_previousTime.loop(input.s_tick.hold(0));
-    const s_erapsed = input.s_tick.snapshot<number, number>(
+    const c_previousTime = inputs.s_tick.hold(0);
+    // 経過時間はマイナスの値を持つ
+    const s_erapsed = inputs.s_tick.snapshot<number, number>(
       c_previousTime,
-      (newTime, prevTime) => newTime - prevTime,
+      (newTime, prevTime) => prevTime - newTime,
     );
-    const s_add = input.s_timerButtonClicked.mapTo(60 * 1000);
+    const s_add = inputs.s_timerButtonClicked.mapTo(60 * 1000);
     const c_remainigTime = new CellLoop<number>();
     const s_newTime = s_erapsed
       .merge(s_add, (a, b) => a + b)
