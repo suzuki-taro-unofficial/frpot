@@ -32,6 +32,7 @@ type Output = {
   c_temperatureLCD: Cell<string>;
   c_waterLevelMeter: Cell<WaterLevel>;
   c_timerLCD: Cell<string>;
+  c_isLitLockLamp: Cell<boolean>;
 };
 
 export const pot = (input: Input): Output => {

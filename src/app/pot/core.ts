@@ -28,6 +28,7 @@ type Output = {
   c_temperature: Cell<number>;
   c_waterLevel: Cell<WaterLevel>;
   c_keepWarmMode: Cell<KeepWarmMode>;
+  c_lock: Cell<boolean>;
 };
 
 export const core = ({}: Input): Output => {
@@ -41,6 +42,7 @@ export const core = ({}: Input): Output => {
     c_temperature: new Cell(0),
     c_waterLevel: new Cell<WaterLevel>(0),
     c_timer: new Cell(0),
+    c_lock: new Cell(true),
   };
 };
 
@@ -345,11 +347,12 @@ export const lockState = ({
 }: lockStateInput): Cell<boolean> => {
   return Transaction.run(() => {
     const c_lockState = new CellLoop<boolean>();
-    s_lockButtonClicked
+    c_lockState.loop(s_lockButtonClicked
       .snapshot(c_lockState, (_, lockState) => {
         return !lockState;
       })
-      .hold(true);
+      .hold(true));
+    return c_lockState;
   });
 };
 
@@ -379,9 +382,27 @@ export const hotWaterSupply = ({
 //熱量ストリーム
 type heaterPowerInput = {
   s_waterLevelSensor: Stream<WaterLevel>;
-  c_taregetTemperature: Cell<number>;
+  c_targetTemperature: Cell<number>;
+  c_status: Cell<Status>;
+  c_temperature: Cell<number>;
 };
 
-export const heaterPower = (_: heaterPowerInput): Cell<number> => {
-  return new Cell(100);
+export const heaterPower = ({s_waterLevelSensor, c_targetTemperature, c_status, c_temperature}: heaterPowerInput): Cell<number> => {
+  return s_waterLevelSensor.snapshot4(c_targetTemperature, c_status, c_temperature, (waterLevel, targetTemperature, status, temperature) => {
+    switch(status){
+      case "Boil": return 100;
+      case "KeepWarm":{
+        if((targetTemperature - temperature) < 0) return 0;
+        switch(waterLevel){
+          case 0: return 0;
+          case 1: return (targetTemperature - temperature) / 4;
+          case 2: return (targetTemperature - temperature) / 2;
+          case 3: return (targetTemperature - temperature) * 3 / 4;
+          case 4: return (targetTemperature - temperature);
+          default: return 0;
+        }
+      }
+      case "Stop": return 0;
+    }
+  })
 };
