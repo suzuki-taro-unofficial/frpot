@@ -4,9 +4,7 @@ import { simulator } from "./simulator";
 import { pot } from "./pot/pot";
 import { CellLoop, Stream, Unit } from "sodiumjs";
 
-export const app = (): ViewItem => {
-  const s_tick = new Stream<Unit>();
-
+export const app = (s_tick: Stream<Unit>): ViewItem => {
   const waterInButton = new Button("水追加");
 
   const cloop_heaterPower = new CellLoop<number>();
