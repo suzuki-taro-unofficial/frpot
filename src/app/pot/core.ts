@@ -200,10 +200,12 @@ export const s_beep = (_: beepInput): Stream<beepType> => {
 
 //ロック状態かどうかを保持するセル
 //trueの時ロック状態
+const s_lockButtonClicked = new Stream<Unit>();
+
 const c_lockState = new CellLoop<boolean>();
 c_lockState.loop(
-  s_lockButtonClicked.snapshot(c_lockstate, (lockstate) =>) => {
-    return !lockstate;
+  s_lockButtonClicked.snapshot(c_lockState, (_, lockState) => {
+    return !lockState;
   }).hold(true),
 );
 
