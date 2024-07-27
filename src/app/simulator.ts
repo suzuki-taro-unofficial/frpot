@@ -45,11 +45,11 @@ export const simulator = ({
           return (
             amount +
             in_amount +
-            (should_out ? -emitPerSec * (currTime - prevTime) : 0)
+            (should_out ? -emitPerSec * ((currTime - prevTime) / 1000) : 0)
           );
         },
       )
-      .filter((new_amount) => new_amount <= actualCapacity)
+      .filter((new_amount) => new_amount <= actualCapacity && new_amount >= 0)
       .hold(0),
   );
 
@@ -63,7 +63,7 @@ export const simulator = ({
         c_amount,
         c_heaterPower,
         (currTime, prevTime, temp, amount, power) => {
-          const joule = power * (currTime - prevTime);
+          const joule = power * ((currTime - prevTime) / 1000);
           if (amount <= 10) {
             // 水の量が極端に少ないなら異常加熱
             return { cond: true, temp: temp + joule }; // TODO: 良い感じの温度変化
