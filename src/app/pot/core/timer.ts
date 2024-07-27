@@ -23,7 +23,7 @@ export const timer = (inputs: TimerInput): TimerOutput => {
     const s_newTime = s_erapsed
       .merge(s_add, (a, b) => a + b)
       .snapshot(c_remainigTime, (delta, remaining) => {
-        return Math.max(0, delta - remaining);
+        return Math.max(0, remaining + delta);
       });
     c_remainigTime.loop(s_newTime.hold(0));
     const s_beep = s_newTime
@@ -33,7 +33,7 @@ export const timer = (inputs: TimerInput): TimerOutput => {
       .filter(({ newTime, remaining }) => newTime === 0 && remaining > 0) // 残り時間が0になった最初の論理的時刻のみ通す
       .mapTo(new Unit());
     return {
-      c_remainigTime: c_remainigTime.map((time) => Math.floor(time / 1000 / 60)),
+      c_remainigTime: c_remainigTime.map((time) => Math.ceil(time / 1000 / 60)),
       s_beep: s_beep,
     };
   });
