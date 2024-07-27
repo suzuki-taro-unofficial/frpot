@@ -30,7 +30,7 @@ type Output = {
   c_warmLevel: Cell<number>;
 };
 
-export const core = ({}: Input): Output => {
+export const core = ({ }: Input): Output => {
   return {
     // for simulator
     c_heaterPower: new Cell(0),
@@ -266,10 +266,12 @@ type lockStateInput = {
   s_lockButtonClicked: Stream<Unit>;
 };
 
-export const lockState = (s_lockButtonClicked): Cell<boolean> => {
+export const lockState = ({
+  s_lockButtonClicked,
+}: lockStateInput): Cell<boolean> => {
   return Transaction.run(() => {
     const c_lockState = new CellLoop<boolean>();
-    c_lockButtonClicked
+    s_lockButtonClicked
       .snapshot(c_lockState, (_, lockState) => {
         return !lockState;
       })
