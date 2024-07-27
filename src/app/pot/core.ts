@@ -1,5 +1,5 @@
 import { Cell, CellLoop, Stream, Transaction, Unit } from "sodiumjs";
-import { WaterLevel } from "../types";
+import { LidState, WaterLevel } from "../types";
 import { KeepWarmMode, Status } from "./types";
 
 type Input = {
@@ -14,7 +14,7 @@ type Input = {
   s_timerButtonClicked: Stream<Unit>;
   s_warmingConfigButtonClicked: Stream<Unit>;
   s_lockButtonClicked: Stream<Unit>;
-  s_cover: Stream<Unit>;
+  s_lid: Stream<LidState>;
   c_hotWarterSupplyButtonPushing: Cell<boolean>;
 };
 
@@ -28,6 +28,7 @@ type Output = {
   c_temperature: Cell<number>;
   c_waterLevel: Cell<WaterLevel>;
   c_keepWarmMode: Cell<KeepWarmMode>;
+  c_lock: Cell<boolean>;
 };
 
 export const core = ({}: Input): Output => {
@@ -41,6 +42,7 @@ export const core = ({}: Input): Output => {
     c_temperature: new Cell(0),
     c_waterLevel: new Cell<WaterLevel>(0),
     c_timer: new Cell(0),
+    c_lock: new Cell(true),
   };
 };
 
@@ -140,15 +142,48 @@ export const error_temperature_too_hight = ({
 type StatusInput = {
   s_temperatureSensor: Stream<number>;
   s_voilButtonClicked: Stream<Unit>;
-  s_cover: Stream<Unit>;
+  s_lid: Stream<LidState>;
   s_waterOverflowSensor: Stream<boolean>;
   s_waterLevelSensor: Stream<WaterLevel>;
   s_errorTemperatureNotIncreased: Stream<Unit>;
   s_errorTemperatureTooHigh: Stream<Unit>;
+  s_tick: Stream<number>;
 };
 
-export const status = (_: StatusInput): Stream<Status> => {
-  return new Stream();
+// statusの各種停止状態について、それぞれの停止状態の条件が復旧されたかどうかを監視する
+// 仮に障害状態と名付ける
+const blocking_boil = (inputs: StatusInput): Cell<boolean> => {
+  return new Cell(false);
+}
+
+export const status = (inputs: StatusInput): Stream<Status> => {
+  // # statusについて
+
+  // ## 仕様
+  // - 沸騰ボタンを押したとき、温度制御可能な水位ならば沸騰状態になる
+  // - ふたが閉じられたとき、温度制御可能な水位ならば沸騰状態になる
+  // - 沸騰状態で100度に達してから3分間経ったら、保温状態に入る
+  //   - => 目標温度は98度なので、単に100度以上の状態が3分間続くという条件では上手く行かない
+  // - 高温エラー・温度上がらずエラーが出たたときには、停止状態になる
+  // - フタが開いたとき、停止状態になる
+  // - 満水センサがONのとき、停止状態になる
+
+  // ## 停止状態からの復旧について
+  // - 高温エラーのとき
+  //   - => 低温になれば良いので、s_temperatureSensorが一定値以下になったら復旧
+  // - 温度上がらずエラーのとき
+  //   - => 復旧しない
+  // - フタが開いたとき
+  //   - => フタが閉まれば復旧。同時に沸騰状態へ移行
+  // - 満水センサがONのとき
+  //   - => 満水センサがOFFになれば復旧。停止状態のままだけだけど、他のイベントによって沸騰状態に移行する
+  // - 水位が0のとき
+  //   - => 水位が1以上に慣れば復旧。停止状態のままだけど、他のイベントによって沸騰状態に移行する
+
+  // ## 沸騰状態・保温状態について
+  // - 沸騰ボタンを押したとき、または、ふたが閉じられたとき、障害状態でなければ沸騰状態になる
+  // - 沸騰状態で100度に達してから3分間経ったら、保温状態に入る
+  // - 障害状態がtrueのとき、必ず停止状態になる
 };
 
 type KeepWarmModeInput = {
