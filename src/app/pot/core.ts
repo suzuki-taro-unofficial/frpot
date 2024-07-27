@@ -1,4 +1,4 @@
-import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
+import { Cell, CellLoop, Stream, Transaction, Unit } from "sodiumjs";
 import { WaterLevel } from "../types";
 import { KeepWarmMode, Mode } from "./types";
 
@@ -151,11 +151,35 @@ export const keep_warm_mode = (
 
 type TimerInput = {
   s_timerButtonClicked: Stream<Unit>;
-  s_tick: Stream<Unit>; // ここのUnitは時刻を表すなにかに変更する
+  s_tick: Stream<number>;
 };
 
-export const timer = (_: TimerInput): Stream<number> => {
-  return new Stream();
+type TimerOutput = {
+  c_remainigTime: Cell<number>;
+  s_beep: Stream<Unit>;
+};
+
+export const timer = (input: TimerInput): TimerOutput => {
+  return Transaction.run(() => {
+    const c_previousTime = new CellLoop<number>();
+    c_previousTime.loop(input.s_tick.hold(0));
+    const s_erapsed = input.s_tick.snapshot<number, number>(
+      c_previousTime,
+      (newTime, prevTime) => newTime - prevTime,
+    );
+    const s_add = input.s_timerButtonClicked.mapTo(60 * 1000);
+    const c_remainigTime = new CellLoop<number>();
+    const s_newTime = s_erapsed
+      .merge(s_add, (a, b) => a + b)
+      .snapshot(c_remainigTime, (delta, remaining) => {
+        return Math.max(0, remaining - delta);
+      });
+    c_remainigTime.loop(s_newTime.hold(0));
+    return {
+      c_remainigTime: c_remainigTime,
+      s_beep: s_newTime.filter((time) => time === 0).mapTo(new Unit()),
+    };
+  });
 };
 
 //ボタンのクリックのストリームを一つにまとめる
