@@ -16,7 +16,7 @@ export const timer = (inputs: TimerInput): TimerOutput => {
     // 経過時間はマイナスの値を持つ
     const s_erapsed = inputs.s_tick.snapshot<number, number>(
       c_previousTime,
-      (newTime, prevTime) => prevTime === 0 ? 0 : prevTime - newTime,
+      (newTime, prevTime) => (prevTime === 0 ? 0 : prevTime - newTime),
     );
     const s_add = inputs.s_timerButtonClicked.mapTo(60 * 1000);
     const c_remainigTime = new CellLoop<number>();
