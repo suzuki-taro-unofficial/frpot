@@ -165,15 +165,17 @@ export const s_beep = (_: beepInput): Stream<beepType> => {
 };
 
 //ロック状態かどうかを保持するセル
-//const c_lockState = new CellLoop<boolean>();
-//c_lockState.loop(
-//  s_lockButtonClicked.snapshot(
-//  ).hold(true),
-//);
+//trueの時ロック状態
+const c_lockState = new CellLoop<boolean>();
+c_lockState.loop(
+  s_lockButtonClicked.snapshot(c_lockstate, (lockstate) =>) => {
+    return !lockstate;
+  }).hold(true),
+);
 
 //給湯のON/OFFを決める
 type hotWaterSupplyInput = {
-  s_tick: Stream<Unit>;
+  s_tick: Stream<number>;
   c_lockState: Cell<boolean>;
   c_hotWaterSupplyButtonPushing: Cell<boolean>;
 };
