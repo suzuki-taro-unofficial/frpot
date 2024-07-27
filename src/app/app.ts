@@ -5,6 +5,7 @@ import { CellLoop, Stream, Transaction } from "sodiumjs";
 import { Box, Button, Display, Lamp, Meter } from "@/components";
 
 export const app = (s_tick: Stream<number>): ViewItem => {
+  // 入力のユーザインタフェース生成
   const waterInButton = new Button("水追加");
   const voilButton = new Button("沸騰");
   const timerButton = new Button("タイマー");
@@ -13,6 +14,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
   const cover = new Button("ふた");
   const hotWaterSupplyButton = new Button("給湯");
 
+  // ポットのネットワーク全体の構築
   const potOut = Transaction.run(() => {
     const cloop_heaterPower = new CellLoop<number>();
     const cloop_hotWaterSupply = new CellLoop<boolean>();
@@ -41,6 +43,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
     return potOut;
   });
 
+  // 出力のユーザインタフェース生成
   const boilingModeLamp = new Lamp(potOut.c_isLitboilingModeLamp);
   const warmingModeLamp = new Lamp(potOut.c_isLitWarmingModeLamp);
   const warmHighLamp = new Lamp(potOut.c_isLitWarmHighLamp);
@@ -50,6 +53,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
   const timerLCD = new Display(potOut.c_timerLCD);
   const waterLevelMeter = new Meter(potOut.c_waterLevelMeter);
 
+  // ユーザインタフェースの構築
   return new Box(
     new Box(boilingModeLamp, warmingModeLamp),
     new Box(
