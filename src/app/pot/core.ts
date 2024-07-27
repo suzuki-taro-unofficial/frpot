@@ -1,4 +1,4 @@
-import { Cell, Stream, Unit } from "sodiumjs";
+import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
 
 type Input = {
   // from root
@@ -140,20 +140,14 @@ export const s_buttonClicked = (_: buttonClickedInput): Stream<Unit> => {
 
 //ビープストリーム
 
-//ビープの種類のenumを作りたい
-type BEEPTYPE = `Long` | `Short`;
-
-//ビープの種類と回数のタプル
-const beepOut: [BEEPTYPE, number];
-
 //beepの実装は検討中
-type BeepType = LongBeep | ShortBeep;
+type beepType = longBeep | shortBeep;
 
-type LongBeep = {
+type longBeep = {
   kind: "Long";
 };
 
-type ShortBeep = {
+type shortBeep = {
   kind: "Short";
   count: number;
 };
@@ -167,8 +161,8 @@ type beepInput = {
   s_tick: Stream<Unit>;
 };
 
-export const s_beep = (_: beepInput): Stream<beepOut> => {
-  return new Stream<`Short`, 3>();
+export const s_beep = (_: beepInput): Stream<beepType> => {
+  return new Stream<beepType>();
 };
 
 //ロック状態かどうかを保持するセル
@@ -186,8 +180,10 @@ type hotWaterSupplyInput = {
 };
 
 export const hotWaterSupply = (_: hotWaterSupplyInput): Cell<boolean> => {
-  return new Stream<false>();
+  return new Cell(false);
 };
+
+type WaterLevel = any; // TODO: 型を決める
 
 //熱量ストリーム
 type heaterPowerInput = {
@@ -195,6 +191,6 @@ type heaterPowerInput = {
   tareget_Temperature: Cell<number>;
 };
 
-export const heaterPower = (_: heaterPowerInput): Stream<Number> => {
-  return new Stream<100>();
+export const heaterPower = (_: heaterPowerInput): Stream<number> => {
+  return new Stream();
 };
