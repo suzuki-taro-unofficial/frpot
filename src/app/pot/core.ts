@@ -38,18 +38,15 @@ export const core = ({}: Input): Output => {
   };
 };
 
-// TODO:
-// anyを具体的な型に変更
-
 type TargetTemperatureInput = {
-  c_mode: Cell<any>;
-  c_warmLevel: Cell<any>;
+  c_mode: Cell<Mode>;
+  c_warmLevel: Cell<KeepWarmMode>;
 };
 
 type ErrorTemperatureNotIncreasedInput = {
   s_tick: Stream<Unit>;
   s_temperature: Stream<number>;
-  c_mode: Cell<any>;
+  c_mode: Cell<Mode>;
 };
 
 type ErrorTemperatureTooHighInput = {
