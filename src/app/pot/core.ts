@@ -1,6 +1,6 @@
 import { Cell, CellLoop, Stream, Transaction, Unit } from "sodiumjs";
 import { WaterLevel } from "../types";
-import { KeepWarmMode, Mode } from "./types";
+import { KeepWarmMode, Mode as Status } from "./types";
 
 type Input = {
   // from root
@@ -23,11 +23,11 @@ type Output = {
   c_heaterPower: Cell<number>;
   c_hotWaterSuply: Cell<boolean>;
   // for presenter
-  c_mode: Cell<any>;
+  c_status: Cell<Status>;
   c_timer: Cell<number>;
   c_temperature: Cell<number>;
   c_waterLevel: Cell<WaterLevel>;
-  c_warmLevel: Cell<number>;
+  c_keepWarmMode: Cell<KeepWarmMode>;
 };
 
 export const core = ({}: Input): Output => {
@@ -36,20 +36,25 @@ export const core = ({}: Input): Output => {
     c_heaterPower: new Cell(0),
     c_hotWaterSuply: new Cell(false),
     // for presenter
+    c_mode: new Cell<Mode>("Stop"),
+    c_keepWarmMode: new Cell<KeepWarmMode>("High"),
+    c_temperature: new Cell(0),
+    c_waterLevel: new Cell<WaterLevel>(0),
+    c_timer: new Cell(0),
   };
 };
 
 type TargetTemperatureInput = {
-  c_mode: Cell<Mode>;
+  c_status: Cell<Status>;
   c_warmLevel: Cell<KeepWarmMode>;
 };
 
 export const target_temperature = ({
-  c_mode,
+  c_status,
   c_warmLevel,
 }: TargetTemperatureInput): Cell<number> => {
-  return c_mode.lift(c_warmLevel, (mode, warmLevel): number => {
-    switch (mode) {
+  return c_status.lift(c_warmLevel, (status, warmLevel): number => {
+    switch (status) {
       case "Boil":
         return 100;
       case "KeepWarm":
@@ -70,7 +75,7 @@ export const target_temperature = ({
 type ErrorTemperatureNotIncreasedInput = {
   s_tick: Stream<number>;
   s_temperature: Stream<number>;
-  c_mode: Cell<Mode>;
+  c_status: Cell<Status>;
   c_warmLevel: Cell<KeepWarmMode>;
 };
 
@@ -78,7 +83,7 @@ type ErrorTemperatureNotIncreasedInput = {
 export const error_temperature_not_increased = ({
   s_tick,
   s_temperature,
-  c_mode,
+  c_status,
   c_warmLevel,
 }: ErrorTemperatureNotIncreasedInput): Stream<Unit> => {
   return Transaction.run(() => {
@@ -94,7 +99,7 @@ export const error_temperature_not_increased = ({
       .filterNotNull() as Stream<number>;
     c_prevTime.loop(s_oneMinutesPassed.hold(Date.now()));
 
-    const c_targetTemp = target_temperature({ c_mode, c_warmLevel });
+    const c_targetTemp = target_temperature({ c_status, c_warmLevel });
     const c_currTemp = s_temperature.hold(0);
     const c_prevTemp = s_oneMinutesPassed
       .snapshot(c_currTemp, (_, temp) => temp)
@@ -132,7 +137,7 @@ export const error_temperature_too_hight = ({
     });
 };
 
-type ModeInput = {
+type StatusInput = {
   s_temperatureSensor: Stream<number>;
   s_voilButtonClicked: Stream<Unit>;
   s_cover: Stream<Unit>;
@@ -142,7 +147,7 @@ type ModeInput = {
   s_errorTemperatureTooHigh: Stream<Unit>;
 };
 
-export const mode = (_: ModeInput): Stream<Mode> => {
+export const status = (_: StatusInput): Stream<Status> => {
   return new Stream();
 };
 
@@ -251,7 +256,7 @@ type beepInput = {
   s_errorTemperatureTooHight: Stream<Unit>;
   s_errorTemperatureNotIncreased: Stream<Unit>;
   s_timer: Stream<Unit>;
-  s_mode: Stream<Mode>;
+  s_mode: Stream<Status>;
   s_bottunClicked: Stream<Unit>;
   s_tick: Stream<Unit>;
 };
