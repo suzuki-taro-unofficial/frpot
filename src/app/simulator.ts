@@ -41,6 +41,13 @@ export const simulator = ({
   const actualCapacity = capacity + 200;
   const emitPerSec = 100;
 
+  const c_lid = s_lid.accum<LidState>("Open", (_, state) =>
+    state === "Open" ? "Close" : "Open",
+  );
+  const s_lidStateSensor = s_tick.snapshot1(c_lid);
+
+  c_lid.listen((s) => console.log("lid: ", s));
+
   const c_prevTime = s_tick.hold(Date.now());
 
   const c_amount = new CellLoop<number>();
@@ -59,6 +66,7 @@ export const simulator = ({
           );
         },
       )
+      .gate(c_lid.map((s) => s === "Open"))
       .map((amount) => clamp(amount, 0, actualCapacity))
       .hold(0),
   );
@@ -112,11 +120,6 @@ export const simulator = ({
   const s_waterOverflowSensor = s_tick.snapshot(c_amount, (_, amount) => {
     return amount > actualCapacity;
   });
-
-  const c_lid = s_lid.accum<LidState>("Open", (state, _) =>
-    state === "Open" ? "Close" : "Open",
-  );
-  const s_lidStateSensor = s_tick.snapshot1(c_lid);
 
   return {
     s_temperatureSensor,
