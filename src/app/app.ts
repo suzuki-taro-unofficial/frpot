@@ -13,7 +13,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
   const timerButton = new Button("タイマー");
   const warmingConfigButton = new Button("保温設定");
   const lockButton = new Button("解除");
-  const cover = new Button("ふた");
+  const lidButton = new Button("ふた");
   const hotWaterSupplyButton = new Button("給湯");
 
   // ポットのネットワーク全体の構築
@@ -28,6 +28,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
       ),
       c_heaterPower: cloop_heaterPower,
       c_hotWaterSupply: cloop_hotWaterSupply,
+      s_lid: lidButtun.s_clicked,
     });
 
     const potOut = pot({
@@ -37,7 +38,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
       s_timerButtonClicked: timerButton.s_clicked,
       s_warmingConfigButtonClicked: warmingConfigButton.s_clicked,
       s_lockButtonClicked: lockButton.s_clicked,
-      s_cover: cover.s_clicked,
+      s_cover: lidButton.s_clicked,
       c_hotWarterSupplyButtonPushing: hotWaterSupplyButton.c_pushing,
     });
 
