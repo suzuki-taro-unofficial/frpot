@@ -1,5 +1,6 @@
 import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
 import { WaterLevel } from "../types";
+import { KeepWarmMode, Mode } from "./types";
 
 type Input = {
   // from root
@@ -75,9 +76,6 @@ export const error_temperature_too_hight = ({
     });
 };
 
-// Modeは一般的すぎるので、なんか具体的な名前に変えたいが思いつかない
-type Mode = "Boil" | "KeepWarm" | "Stop";
-
 type ModeInput = {
   s_temperatureSensor: Stream<number>;
   s_voilButtonClicked: Stream<Unit>;
@@ -91,8 +89,6 @@ type ModeInput = {
 export const mode = (_: ModeInput): Stream<Mode> => {
   return new Stream();
 };
-
-type KeepWarmMode = "High" | "Economy" | "Milk";
 
 type KeepWarmModeInput = {
   s_warmingConfigButtonClicked: Stream<Unit>;

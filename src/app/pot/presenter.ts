@@ -1,10 +1,10 @@
 import { Cell } from "sodiumjs";
 import { WaterLevel } from "@/app/types";
+import { KeepWarmMode, Mode } from "./types";
 
 type Input = {
-  // TODO: 型を決める
-  c_mode: Cell<any>;
-  c_warmLevel: Cell<any>;
+  c_mode: Cell<Mode>;
+  c_keepWarmMode: Cell<KeepWarmMode>;
   c_temperature: Cell<number>;
   c_waterLevel: Cell<WaterLevel>;
   c_timer: Cell<number>;
@@ -23,17 +23,17 @@ type Output = {
 
 export const presenter = ({
   c_mode,
-  c_warmLevel,
+  c_keepWarmMode,
   c_temperature,
   c_waterLevel,
   c_timer,
 }: Input): Output => {
   return {
-    c_isLitVoilingModeLamp: c_mode.map((mode) => mode === "VOILING"),
-    c_isLitWarmingModeLamp: c_mode.map((mode) => mode === "WARMING"),
-    c_isLitWarmHighLamp: c_warmLevel.map((level) => level === "HIGH"),
-    c_isLitWarmSavingsLamp: c_warmLevel.map((level) => level === "SAVING"),
-    c_isLitWarmMilkLamp: c_warmLevel.map((level) => level === "MILK"),
+    c_isLitVoilingModeLamp: c_mode.map((mode) => mode === "Boil"),
+    c_isLitWarmingModeLamp: c_mode.map((mode) => mode === "KeepWarm"),
+    c_isLitWarmHighLamp: c_keepWarmMode.map((level) => level === "High"),
+    c_isLitWarmSavingsLamp: c_keepWarmMode.map((level) => level === "Economy"),
+    c_isLitWarmMilkLamp: c_keepWarmMode.map((level) => level === "Milk"),
     c_temperatureLCD: c_temperature.map((temp) => temp.toString()),
     c_timerLCD: c_timer.map((t) => t.toString()),
     c_waterLevelMeter: c_waterLevel,
