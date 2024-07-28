@@ -47,6 +47,8 @@ type StatusInput = {
 // statusの各種停止状態について、それぞれの停止状態の条件が復旧されたかどうかを監視する
 // 障害状態と名付ける
 const failure_status = (inputs: StatusInput): Stream<boolean> => {
+  // 各種ストリームを、この更新用の型に変換する
+  // 更新しない場合はnullを入れる
   type FailureStatusUpdate = {
     temperatureTooHigh: boolean | null;
     temperatureNotIncreased: boolean | null;
@@ -184,6 +186,7 @@ const failure_status = (inputs: StatusInput): Stream<boolean> => {
   );
 
   // 変化があったときのみ発火するストリーム
+  // 本当はストリームが発火するタイミングをもっと絞り込めるけれど、デバッグ出力との兼ね合いでこんな実装にした
   const s_filterdFailureStatus = s_newFailureStatus
     .snapshot(c_failureStatus, (newStatus, oldStatus) => {
       return {
