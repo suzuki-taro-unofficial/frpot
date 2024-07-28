@@ -122,8 +122,10 @@ export const simulator = ({
   );
 
   const s_waterOverflowSensor = s_tick.snapshot(c_amount, (_, amount) => {
-    return amount > actualCapacity;
+    return amount >= actualCapacity - 100;
   });
+
+  s_waterOverflowSensor.listen((cond) => console.log(cond));
 
   return {
     s_temperatureSensor,
