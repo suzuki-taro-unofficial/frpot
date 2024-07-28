@@ -1,7 +1,6 @@
-import { Stream, Unit, Cell, CellLoop, Transaction } from "sodiumjs";
+import { Stream, Unit, CellLoop, Transaction } from "sodiumjs";
 import { LidState, WaterLevel } from "../../types";
 import { Status } from "../types";
-import { error_temperature_too_hight } from "./error";
 
 type StatusInput = {
   s_temperatureSensor: Stream<number>;
