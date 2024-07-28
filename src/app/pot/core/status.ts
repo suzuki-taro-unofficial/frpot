@@ -30,7 +30,7 @@ type StatusInput = {
 - 高温エラーのとき
   - => 低温になれば良いので、s_temperatureSensorが一定値以下になったら復旧
 - 温度上がらずエラーのとき
-  - => 復旧しない
+  - => フタを開けて水を入れたりした可能性もあるので、フタが閉まったら復旧
 - フタが開いたとき
   - => フタが閉まれば復旧。同時に沸騰状態へ移行
 - 満水センサがONのとき
@@ -54,7 +54,9 @@ type FailureStatusUpdate = {
   waterLevelTooLow: boolean | null;
 };
 
-const errorTemperatureTooHighUpdate = (inputs: StatusInput): Stream<FailureStatusUpdate> => {
+const errorTemperatureTooHighUpdate = (
+  inputs: StatusInput,
+): Stream<FailureStatusUpdate> => {
   return inputs.s_errorTemperatureTooHigh
     .mapTo<FailureStatusUpdate>({
       temperatureTooHigh: true,
@@ -74,17 +76,31 @@ const errorTemperatureTooHighUpdate = (inputs: StatusInput): Stream<FailureStatu
           waterLevelTooLow: null,
         }),
     );
-}
+};
 
-const errorTemperatureNotIncreasedUpdate = (inputs: StatusInput): Stream<FailureStatusUpdate> => {
-  return inputs.s_errorTemperatureNotIncreased.mapTo<FailureStatusUpdate>({
-    temperatureTooHigh: null,
-    temperatureNotIncreased: true,
-    lidOpen: null,
-    waterOverflow: null,
-    waterLevelTooLow: null,
-  }); // 一度エラーが出たら復旧しない
-}
+const errorTemperatureNotIncreasedUpdate = (
+  inputs: StatusInput,
+): Stream<FailureStatusUpdate> => {
+  return inputs.s_errorTemperatureNotIncreased
+    .mapTo<FailureStatusUpdate>({
+      temperatureTooHigh: null,
+      temperatureNotIncreased: true,
+      lidOpen: null,
+      waterOverflow: null,
+      waterLevelTooLow: null,
+    })
+    .orElse(
+      inputs.s_lid
+        .filter((lid) => lid === "Close")
+        .mapTo<FailureStatusUpdate>({
+          temperatureTooHigh: null,
+          temperatureNotIncreased: false,
+          lidOpen: null,
+          waterOverflow: null,
+          waterLevelTooLow: null,
+        }),
+    );
+};
 
 const s_lidOpenUpdate = (inputs: StatusInput): Stream<FailureStatusUpdate> => {
   return inputs.s_lid.map<FailureStatusUpdate>((lid) => {
@@ -96,9 +112,11 @@ const s_lidOpenUpdate = (inputs: StatusInput): Stream<FailureStatusUpdate> => {
       waterLevelTooLow: null,
     };
   });
-}
+};
 
-const s_waterOverflowUpdate = (inputs: StatusInput): Stream<FailureStatusUpdate> => {
+const s_waterOverflowUpdate = (
+  inputs: StatusInput,
+): Stream<FailureStatusUpdate> => {
   return inputs.s_waterOverflowSensor.map<FailureStatusUpdate>((cond) => {
     return {
       temperatureTooHigh: null,
@@ -108,9 +126,11 @@ const s_waterOverflowUpdate = (inputs: StatusInput): Stream<FailureStatusUpdate>
       waterLevelTooLow: null,
     };
   });
-}
+};
 
-const s_waterLevelTooLowUpdate = (inputs: StatusInput): Stream<FailureStatusUpdate> => {
+const s_waterLevelTooLowUpdate = (
+  inputs: StatusInput,
+): Stream<FailureStatusUpdate> => {
   return inputs.s_waterLevelSensor
     .filter((level) => level === 0)
     .mapTo<FailureStatusUpdate>({
@@ -131,24 +151,29 @@ const s_waterLevelTooLowUpdate = (inputs: StatusInput): Stream<FailureStatusUpda
           waterLevelTooLow: false,
         }),
     );
-}
+};
 
 // 今回は左辺でfalse, 右辺でtrueが来るようなことはないので、??演算子で十分
-const mergeFailureStatusUpdate : (a: FailureStatusUpdate, b: FailureStatusUpdate) => FailureStatusUpdate = (a, b) => {
+const mergeFailureStatusUpdate: (
+  a: FailureStatusUpdate,
+  b: FailureStatusUpdate,
+) => FailureStatusUpdate = (a, b) => {
   return {
     temperatureTooHigh: a.temperatureTooHigh ?? b.temperatureTooHigh,
-    temperatureNotIncreased: a.temperatureNotIncreased ?? b.temperatureNotIncreased,
+    temperatureNotIncreased:
+      a.temperatureNotIncreased ?? b.temperatureNotIncreased,
     lidOpen: a.lidOpen ?? b.lidOpen,
     waterOverflow: a.waterOverflow ?? b.waterOverflow,
     waterLevelTooLow: a.waterLevelTooLow ?? b.waterLevelTooLow,
   };
-}
+};
 
 // statusの各種停止状態について、それぞれの停止状態の条件が復旧されたかどうかを監視する
 // 障害状態と名付ける
 const failure_status = (inputs: StatusInput): Stream<boolean> => {
   const s_errorTemperatureTooHigh = errorTemperatureTooHighUpdate(inputs);
-  const s_errorTemperatureNotIncreased = errorTemperatureNotIncreasedUpdate(inputs);
+  const s_errorTemperatureNotIncreased =
+    errorTemperatureNotIncreasedUpdate(inputs);
   const s_lidOpen = s_lidOpenUpdate(inputs);
   const s_waterOverflow = s_waterOverflowUpdate(inputs);
   const s_waterLevelTooLow = s_waterLevelTooLowUpdate(inputs);
@@ -242,7 +267,13 @@ const failure_status = (inputs: StatusInput): Stream<boolean> => {
         waterOverflowNew,
         waterLevelTooLowNew,
       }) => {
-        console.log({temperatureTooHigh: temperatureTooHighNew, temperatureNotIncreased: temperatureNotIncreasedNew, lidOpen: lidOpenNew, waterOverflow: waterOverflowNew, waterLevelTooLow: waterLevelTooLowNew});
+        console.log({
+          temperatureTooHigh: temperatureTooHighNew,
+          temperatureNotIncreased: temperatureNotIncreasedNew,
+          lidOpen: lidOpenNew,
+          waterOverflow: waterOverflowNew,
+          waterLevelTooLow: waterLevelTooLowNew,
+        });
         return (
           temperatureTooHighNew ||
           temperatureNotIncreasedNew ||
