@@ -26,9 +26,7 @@ export const error_temperature_not_increased = ({
     c_prevTime.loop(s_oneMinutesPassed.hold(Date.now()));
 
     const c_currTemp = s_temperature.hold(0);
-    const c_prevTemp = s_oneMinutesPassed
-      .snapshot(c_currTemp, (_, temp) => temp)
-      .hold(0);
+    const c_prevTemp = s_oneMinutesPassed.snapshot1(c_currTemp).hold(0);
 
     return s_oneMinutesPassed
       .snapshot4(
@@ -40,7 +38,7 @@ export const error_temperature_not_increased = ({
         },
       )
       .filter((cond) => cond)
-      .mapTo(new Unit());
+      .mapTo(Unit.UNIT);
   });
 };
 
@@ -51,11 +49,5 @@ type ErrorTemperatureTooHighInput = {
 export const error_temperature_too_hight = ({
   s_temperature,
 }: ErrorTemperatureTooHighInput): Stream<Unit> => {
-  return s_temperature
-    .filter((temp) => {
-      return temp > 110;
-    })
-    .map((_) => {
-      return new Unit();
-    });
+  return s_temperature.filter((temp) => temp > 110).mapTo(Unit.UNIT);
 };
