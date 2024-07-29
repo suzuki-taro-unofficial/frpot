@@ -174,7 +174,7 @@ export const keep_warm_mode = (
 };
 
 //ロック状態かどうかを保持するセル
-//trueの時ロック状態
+//trueの時ロック解除状態
 type lockStateInput = {
   s_lockButtonClicked: Stream<Unit>;
 };
@@ -189,7 +189,7 @@ export const lockState = ({
         .snapshot(c_lockState, (_, lockState) => {
           return !lockState;
         })
-        .hold(true),
+        .hold(false),
     );
     return c_lockState;
   });
