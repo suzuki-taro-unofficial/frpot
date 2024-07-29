@@ -1,0 +1,22 @@
+from: html
+to: pdf
+
+input-files:
+  - output.html
+output-file: output.pdf
+metadata-file: meta.yaml
+
+variables:
+  classoption:
+    - pandoc
+  documentclass:
+    - bxjsarticle
+
+toc: true
+toc-depth: 2
+css:
+  - github.css
+file-scope: true
+highlight-style: tango
+resource-path:
+  - images
