@@ -28,16 +28,16 @@ export const error_temperature_not_increased = ({
     const c_currTemp = s_temperature.hold(0);
     const c_prevTemp = s_oneMinutesPassed.snapshot1(c_currTemp).hold(0);
 
+    const c_isTemperatureNotIncreased = c_currTemp.lift3(
+      c_prevTemp,
+      c_targetTemp,
+      (currTemp, prevTemp, targetTemp) => {
+        return currTemp - 5 <= targetTemp && prevTemp > currTemp;
+      },
+    );
+
     return s_oneMinutesPassed
-      .snapshot4(
-        c_currTemp,
-        c_prevTemp,
-        c_targetTemp,
-        (_, currTemp, prevTemp, targetTemp) => {
-          return currTemp - 5 <= targetTemp && prevTemp > currTemp;
-        },
-      )
-      .filter((cond) => cond)
+      .gate(c_isTemperatureNotIncreased)
       .mapTo(Unit.UNIT);
   });
 };
