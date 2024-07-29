@@ -12,34 +12,30 @@ export const error_temperature_not_increased = ({
   s_temperature,
   c_targetTemp,
 }: ErrorTemperatureNotIncreasedInput): Stream<Unit> => {
-  return Transaction.run(() => {
-    const c_prevTime = new CellLoop<number>();
-    const s_oneMinutesPassed = s_tick
-      .snapshot(c_prevTime, (currTime, prevTime) => {
-        if (currTime - prevTime >= 60 * 1000) {
-          return currTime;
-        } else {
-          return null;
-        }
-      })
-      .filterNotNull() as Stream<number>;
-    c_prevTime.loop(s_oneMinutesPassed.hold(Date.now()));
+  const c_prevTime = new CellLoop<number>();
+  const s_oneMinutesPassed = s_tick
+    .snapshot(c_prevTime, (currTime, prevTime) => {
+      if (currTime - prevTime >= 60 * 1000) {
+        return currTime;
+      } else {
+        return null;
+      }
+    })
+    .filterNotNull() as Stream<number>;
+  c_prevTime.loop(s_oneMinutesPassed.hold(Date.now()));
 
-    const c_currTemp = s_temperature.hold(0);
-    const c_prevTemp = s_oneMinutesPassed.snapshot1(c_currTemp).hold(0);
+  const c_currTemp = s_temperature.hold(0);
+  const c_prevTemp = s_oneMinutesPassed.snapshot1(c_currTemp).hold(0);
 
-    const c_isTemperatureNotIncreased = c_currTemp.lift3(
-      c_prevTemp,
-      c_targetTemp,
-      (currTemp, prevTemp, targetTemp) => {
-        return currTemp - 5 <= targetTemp && prevTemp > currTemp;
-      },
-    );
+  const c_isTemperatureNotIncreased = c_currTemp.lift3(
+    c_prevTemp,
+    c_targetTemp,
+    (currTemp, prevTemp, targetTemp) => {
+      return currTemp - 5 <= targetTemp && prevTemp > currTemp;
+    },
+  );
 
-    return s_oneMinutesPassed
-      .gate(c_isTemperatureNotIncreased)
-      .mapTo(Unit.UNIT);
-  });
+  return s_oneMinutesPassed.gate(c_isTemperatureNotIncreased).mapTo(Unit.UNIT);
 };
 
 type ErrorTemperatureTooHighInput = {
