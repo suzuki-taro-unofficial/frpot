@@ -11,6 +11,7 @@ test("temperature increased correctly", () => {
   const s_temperature = new StreamSink<number>();
   const c_targetTemp = new Cell(50);
 
+  const out: Unit[] = [];
   const s_error = Transaction.run(() => {
     return error_temperature_not_increased({
       s_tick,
@@ -18,9 +19,7 @@ test("temperature increased correctly", () => {
       c_targetTemp,
     });
   });
-
-  const c_error_happen = s_error.mapTo(true).hold(false);
-  c_error_happen.listen((cond) => expect(!cond, "error happen").toBeTruthy());
+  s_error.listen((u) => out.push(u));
 
   s_temperature.send(20);
   s_tick.send(s_to_ms(60));
@@ -30,6 +29,8 @@ test("temperature increased correctly", () => {
 
   s_temperature.send(60);
   s_tick.send(s_to_ms(60));
+
+  expect(out).toEqual([]);
 });
 
 test("temperature doesn't increased correctly", () => {
@@ -37,6 +38,7 @@ test("temperature doesn't increased correctly", () => {
   const s_temperature = new StreamSink<number>();
   const c_targetTemp = new Cell(50);
 
+  const out: Unit[] = [];
   const s_error = Transaction.run(() => {
     return error_temperature_not_increased({
       s_tick,
@@ -44,12 +46,7 @@ test("temperature doesn't increased correctly", () => {
       c_targetTemp,
     });
   });
-
-  const s_check = new StreamSink<Unit>();
-  const c_error_happen = s_error.mapTo(true).hold(false);
-  s_check
-    .snapshot1(c_error_happen)
-    .listen((cond) => expect(cond, "error doesn't happen").toBeTruthy());
+  s_error.listen((u) => out.push(u));
 
   // まず10度で3分経過させる
   // この時点で温度は10度上がることになるのでエラーは起きない
@@ -69,5 +66,5 @@ test("temperature doesn't increased correctly", () => {
   s_temperature.send(5);
   s_tick.send(s_to_ms(60));
 
-  s_check.send(Unit.UNIT);
+  expect(out).toEqual([Unit.UNIT]);
 });
