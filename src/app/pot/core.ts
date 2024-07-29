@@ -16,6 +16,7 @@ import {
   error_temperature_too_hight,
 } from "./core/error";
 import { timer } from "./core/timer";
+import { beep } from "./core/beep";
 
 type Input = {
   // from root
@@ -112,7 +113,11 @@ export const core = ({
     s_timerButtonClicked,
   });
 
-  const s_buttonClicked = buttonClicked({
+  const s_beep = beep({
+    s_timer: s_timerZero,
+    s_boiled: new Stream(),
+    s_errorTemperatureTooHigh,
+    s_errorTemperatureNotIncreased,
     s_boilButtonClicked,
     s_timerButtonClicked,
     s_warmingConfigButtonClicked,
@@ -122,14 +127,6 @@ export const core = ({
     )
       .filter((v) => v)
       .mapTo(Unit.UNIT),
-  });
-
-  const s_beep = beep({
-    s_timer: s_timerZero,
-    s_boiled: new Stream(),
-    s_buttonClicked,
-    s_errorTemperatureTooHigh,
-    s_errorTemperatureNotIncreased,
   });
 
   return {
@@ -174,55 +171,6 @@ export const keep_warm_mode = (
   });
   warm_level.loop(new_phase.hold("High"));
   return warm_level;
-};
-
-//ボタンのクリックのストリームを一つにまとめる
-type buttonClickedInput = {
-  s_boilButtonClicked: Stream<Unit>;
-  s_timerButtonClicked: Stream<Unit>;
-  s_warmingConfigButtonClicked: Stream<Unit>;
-  s_lockButtonClicked: Stream<Unit>;
-  s_hotWaterSupplyButtonClicked: Stream<Unit>;
-};
-
-export const buttonClicked = ({
-  s_boilButtonClicked,
-  s_timerButtonClicked,
-  s_warmingConfigButtonClicked,
-  s_lockButtonClicked,
-  s_hotWaterSupplyButtonClicked,
-}: buttonClickedInput): Stream<Unit> => {
-  return s_boilButtonClicked
-    .mapTo(new Unit())
-    .orElse(s_timerButtonClicked.mapTo(new Unit()))
-    .orElse(s_warmingConfigButtonClicked.mapTo(new Unit()))
-    .orElse(s_lockButtonClicked.mapTo(new Unit()))
-    .orElse(s_hotWaterSupplyButtonClicked.mapTo(new Unit()));
-};
-
-//ビープストリーム
-//beepの実装は検討中
-type beepInput = {
-  s_errorTemperatureTooHigh: Stream<Unit>;
-  s_errorTemperatureNotIncreased: Stream<Unit>;
-  s_timer: Stream<Unit>;
-  s_buttonClicked: Stream<Unit>;
-  s_boiled: Stream<Unit>;
-};
-
-export const beep = ({
-  s_errorTemperatureTooHigh,
-  s_errorTemperatureNotIncreased,
-  s_timer,
-  s_buttonClicked,
-  s_boiled,
-}: beepInput): Stream<BeepType> => {
-  return s_errorTemperatureNotIncreased
-    .mapTo<BeepType>({ kind: "Long" })
-    .orElse(s_errorTemperatureTooHigh.mapTo<BeepType>({ kind: "Long" }))
-    .orElse(s_timer.mapTo<BeepType>({ kind: "Short", count: 3 }))
-    .orElse(s_buttonClicked.mapTo<BeepType>({ kind: "Short", count: 1 }))
-    .orElse(s_boiled.mapTo<BeepType>({ kind: "Short", count: 3 }));
 };
 
 //ロック状態かどうかを保持するセル
