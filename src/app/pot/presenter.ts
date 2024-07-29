@@ -37,7 +37,7 @@ export const presenter = ({
     c_isLitWarmHighLamp: c_keepWarmMode.map((level) => level === "High"),
     c_isLitWarmEconomyLamp: c_keepWarmMode.map((level) => level === "Economy"),
     c_isLitWarmMilkLamp: c_keepWarmMode.map((level) => level === "Milk"),
-    c_temperatureLCD: c_temperature.map((temp) => temp.toString()),
+    c_temperatureLCD: c_temperature.map((temp) => Math.floor(temp).toString()),
     c_timerLCD: c_timer.map((t) => t.toString()),
     c_waterLevelMeter: c_waterLevel,
     c_isLitLockLamp: c_lock,
