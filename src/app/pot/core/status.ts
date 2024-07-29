@@ -158,7 +158,7 @@ const failureStatus = (inputs: StatusInput): Stream<boolean> => {
   const s_waterOverflow = s_waterOverflowUpdate(inputs);
   const s_waterLevelTooLow = s_waterLevelTooLowUpdate(inputs);
 
-  const c_failureStatus = new CellLoop<{
+  const cloop_failureStatus = new CellLoop<{
     temperatureTooHigh: boolean;
     temperatureNotIncreased: boolean;
     waterOverflow: boolean;
@@ -170,9 +170,9 @@ const failureStatus = (inputs: StatusInput): Stream<boolean> => {
     .merge(s_waterOverflow, mergeFailureStatusUpdate)
     .merge(s_waterLevelTooLow, mergeFailureStatusUpdate);
 
-  c_failureStatus.loop(
+  cloop_failureStatus.loop(
     s_newFailureStatus
-      .snapshot(c_failureStatus, (newStatus, oldStatus) => {
+      .snapshot(cloop_failureStatus, (newStatus, oldStatus) => {
         return {
           temperatureTooHigh:
             newStatus.temperatureTooHigh ?? oldStatus.temperatureTooHigh,
@@ -195,7 +195,7 @@ const failureStatus = (inputs: StatusInput): Stream<boolean> => {
   // 変化があったときのみ発火するストリーム
   // 本当はストリームが発火するタイミングをもっと絞り込めるけれど、デバッグ出力との兼ね合いでこんな実装にした
   const s_filterdFailureStatus = s_newFailureStatus
-    .snapshot(c_failureStatus, (newStatus, oldStatus) => {
+    .snapshot(cloop_failureStatus, (newStatus, oldStatus) => {
       return {
         temperatureTooHighNew:
           newStatus.temperatureTooHigh ?? oldStatus.temperatureTooHigh,
@@ -259,11 +259,11 @@ const failureStatus = (inputs: StatusInput): Stream<boolean> => {
 // 保温状態に切り替わるとき、一回だけ発火する
 const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
   // 100度に入った瞬間から時刻を計算し始める。
-  const c_100DegreeTime = new CellLoop<number>();
+  const cloop_100DegreeTime = new CellLoop<number>();
   // もし100度以上なら可算をし、100度未満になったらリセットする
-  c_100DegreeTime.loop(
+  cloop_100DegreeTime.loop(
     inputs.s_temperatureSensor
-      .snapshot<number, number>(c_100DegreeTime, (temp, time) => {
+      .snapshot<number, number>(cloop_100DegreeTime, (temp, time) => {
         return temp >= 100 ? time : 0;
       })
       .merge(inputs.s_tick, (erapsedTime, deltaTime) => {
@@ -275,7 +275,7 @@ const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
   // テストのため10秒にしている
   const threeMinutes = 10 * 1000;
   const s_turnOnWarmStatus = inputs.s_tick
-    .snapshot(c_100DegreeTime, (deltaTime, erapsedTime) => {
+    .snapshot(cloop_100DegreeTime, (deltaTime, erapsedTime) => {
       return { deltaTime, erapsedTime };
     })
     .filter(({ deltaTime, erapsedTime }) => {
@@ -291,9 +291,8 @@ export const status = (inputs: StatusInput): Stream<Status> => {
   return Transaction.run(() => {
     const s_failureStatus = failureStatus(inputs);
     const s_turnOnKeepWarm = turnOnKeepWarm(inputs);
-    const c_lidClose = inputs.s_lid.map((lid) => lid === "Close").hold(false);
-    const c_status = new CellLoop<Status>();
     const c_prevLid = inputs.s_lid.hold("Open");
+    const cloop_status = new CellLoop<Status>();
 
     const s_failureStatusToStop = s_failureStatus
       .filter((failure) => failure)
@@ -304,7 +303,9 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     const s_turnOnKeepWarmToKeepWarm =
       s_turnOnKeepWarm.mapTo<Status>("KeepWarm");
     const s_boilButtonClickedToBoil = inputs.s_boilButtonClicked
-      .gate(c_lidClose)
+      .snapshot(c_prevLid, (_, prevLid) => {
+        return prevLid === "Close";
+      })
       .mapTo<Status>("Boil");
     const s_lidClosedToBoil = inputs.s_lid
       .snapshot(c_prevLid, (newLid, prevLid) => {
@@ -320,7 +321,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
       .orElse(s_lidClosedToBoil);
     const s_newStatusFiltered = s_newStatusMerged
       .snapshot3(
-        c_status,
+        cloop_status,
         s_failureStatus.hold(true),
         (newStatus, prevStatus, failure) => {
           return {
@@ -332,7 +333,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
       .filter(({ prevStatus, newStatus }) => prevStatus !== newStatus)
       .map(({ newStatus }) => newStatus);
 
-    c_status.loop(s_newStatusFiltered.hold("Stop"));
+    cloop_status.loop(s_newStatusFiltered.hold("Stop"));
     return s_newStatusFiltered;
   });
 };
