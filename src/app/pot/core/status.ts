@@ -151,7 +151,7 @@ const mergeFailureStatusUpdate: (
 
 // statusの各種停止状態について、それぞれの停止状態の条件が復旧されたかどうかを監視する
 // 障害状態と名付ける
-const shouldStop = (inputs: StatusInput): Stream<boolean> => {
+const failureStatus = (inputs: StatusInput): Stream<boolean> => {
   const s_errorTemperatureTooHigh = errorTemperatureTooHighUpdate(inputs);
   const s_errorTemperatureNotIncreased =
     errorTemperatureNotIncreasedUpdate(inputs);
@@ -266,9 +266,9 @@ const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
       .snapshot<number, number>(c_100DegreeTime, (temp, time) => {
         return temp >= 100 ? time : 0;
       })
-      .orElse(
-        inputs.s_tick.snapshot(c_100DegreeTime, (delta, time) => time + delta),
-      )
+      .merge(inputs.s_tick, (erapsedTime, deltaTime) => {
+        return erapsedTime + deltaTime;
+      })
       .hold(0),
   );
 
@@ -280,7 +280,7 @@ const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
     })
     .filter(({ deltaTime, erapsedTime }) => {
       return (
-        erapsedTime + deltaTime >= threeMinutes && erapsedTime < threeMinutes
+        erapsedTime < threeMinutes && threeMinutes <= erapsedTime + deltaTime
       );
     })
     .mapTo<Unit>(new Unit());
@@ -289,20 +289,47 @@ const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
 
 export const status = (inputs: StatusInput): Stream<Status> => {
   return Transaction.run(() => {
-    const s_shouldStop = shouldStop(inputs);
+    const s_failureStatus = failureStatus(inputs);
     const s_turnOnKeepWarm = turnOnKeepWarm(inputs);
     const c_lidClose = inputs.s_lid.map((lid) => lid === "Close").hold(false);
     const c_status = new CellLoop<Status>();
-    const s_new_status = s_shouldStop
+    const c_prevLid = inputs.s_lid.hold("Open");
+    const s_lidClosed = inputs.s_lid
+      .snapshot(c_prevLid, (newLid, prevLid) => {
+        return newLid === "Close" && prevLid === "Open";
+      })
+      .filter((a) => a)
+      .mapTo<Unit>(new Unit());
+    const s_new_status = s_failureStatus
+      .filter((failure) => failure)
       .mapTo<Status>("Stop")
+      .map((a) => {
+        console.log("failureStatus", a);
+        return a;
+      })
       .orElse(inputs.s_boilButtonClicked.gate(c_lidClose).mapTo<Status>("Boil"))
+      .map((a) => {
+        console.log("boilButton", a);
+        return a;
+      })
       .orElse(
-        inputs.s_lid.filter((lid) => lid === "Close").mapTo<Status>("Boil"),
+        s_lidClosed.mapTo<Status>("Boil").map((a) => {
+          console.log("lidClosed", a);
+          return a;
+        }),
       )
-      .orElse(s_turnOnKeepWarm.gate(c_lidClose).mapTo<Status>("KeepWarm"))
+      .orElse(
+        s_turnOnKeepWarm
+          .gate(c_lidClose)
+          .mapTo<Status>("KeepWarm")
+          .map((a) => {
+            console.log("keepWorm", a);
+            return a;
+          }),
+      )
       .snapshot3(
         c_status,
-        s_shouldStop.hold(true),
+        s_failureStatus.hold(true),
         (newStatus, prevStatus, failure) => {
           return {
             newStatus: failure ? "Stop" : newStatus,

@@ -57,12 +57,8 @@ export const simulator = ({
         c_lid,
         (deltaTime, amount, should_in, should_out, lid) => {
           const in_amount =
-            lid == "Open" && should_in
-              ? pourPerSec * (deltaTime / 1000)
-              : 0;
-          const out_amount = should_out
-            ? -emitPerSec * (deltaTime / 1000)
-            : 0;
+            lid == "Open" && should_in ? pourPerSec * (deltaTime / 1000) : 0;
+          const out_amount = should_out ? -emitPerSec * (deltaTime / 1000) : 0;
           return amount + in_amount + out_amount;
         },
       )
@@ -92,7 +88,7 @@ export const simulator = ({
         },
       )
       .map(({ cond, temp }) => (cond ? temp : temp > 100 ? 100 : temp))
-      .hold(25),
+      .hold(80),
   );
 
   const s_temperatureSensor = s_tick.snapshot(c_temp, (_, temp) => {
