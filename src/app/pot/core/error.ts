@@ -35,7 +35,7 @@ export const error_temperature_not_increased = ({
     c_prevTemp,
     c_targetTemp,
     (currTemp, prevTemp, targetTemp) => {
-      return currTemp - 5 <= targetTemp && prevTemp > currTemp;
+      return currTemp + 5 <= targetTemp && prevTemp > currTemp;
     },
   );
 
