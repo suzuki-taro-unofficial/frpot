@@ -308,6 +308,15 @@ export const status = (inputs: StatusInput): Stream<Status> => {
         return a;
       })
       .orElse(
+        inputs.s_lid
+          .filter((lid) => lid === "Open")
+          .mapTo<Status>("Stop")
+          .map((a) => {
+            console.log("lidOpen", a);
+            return a;
+          }),
+      )
+      .orElse(
         s_turnOnKeepWarm
           .gate(c_lidClose)
           .mapTo<Status>("KeepWarm")
