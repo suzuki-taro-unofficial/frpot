@@ -292,13 +292,15 @@ const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
   // その時刻から3分経ってない状態->3分経過した状態になったとき、戻り値のストリームを発火する
   const c_temperature = inputs.s_temperatureSensor.hold(0);
   const c_time = inputs.s_tick.hold(0);
+
   const c_100DegreeTime = inputs.s_temperatureSensor
     .snapshot(c_temperature, (newTemp, oldTemp) => {
       return { newTemp: newTemp, oldTemp: oldTemp };
     })
     .filter(({ newTemp, oldTemp }) => oldTemp < 100 && newTemp >= 100)
-    .snapshot(c_time, (_, time) => time)
+    .snapshot1(c_time)
     .hold(0);
+
   const c_3MinutesPassed = inputs.s_tick
     .snapshot3<number, number, boolean>(
       c_time,
@@ -310,6 +312,7 @@ const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
     )
     .filter((cond) => cond)
     .mapTo(new Unit());
+
   return c_3MinutesPassed;
 };
 
