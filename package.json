@@ -7,13 +7,15 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "fmt": "prettier --write \"./src/**/*.ts\""
+    "fmt": "prettier --write \"./src/**/*.ts\"",
+    "test": "vitest"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
     "typescript": "^5.2.2",
     "vite": "^5.3.1",
-    "vite-tsconfig-paths": "^4.3.2"
+    "vite-tsconfig-paths": "^4.3.2",
+    "vitest": "^2.0.4"
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
