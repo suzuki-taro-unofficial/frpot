@@ -47,8 +47,6 @@ export const simulator = ({
   );
   const s_lidStateSensor = s_tick.snapshot1(c_lid);
 
-  c_lid.listen((s) => console.log("lid: ", s));
-
   const c_prevTime = s_tick.hold(Date.now());
 
   const c_amount = new CellLoop<number>();
@@ -74,8 +72,6 @@ export const simulator = ({
       .map((amount) => clamp(amount, 0, actualCapacity))
       .hold(0),
   );
-
-  c_amount.listen((amount) => console.log("amount ", amount));
 
   // 現在の水の温度で単位は°C
   const c_temp = new CellLoop<number>();
@@ -127,8 +123,6 @@ export const simulator = ({
   const s_waterOverflowSensor = s_tick.snapshot(c_amount, (_, amount) => {
     return amount >= actualCapacity - 100;
   });
-
-  s_waterOverflowSensor.listen((cond) => console.log(cond));
 
   return {
     s_temperatureSensor,
