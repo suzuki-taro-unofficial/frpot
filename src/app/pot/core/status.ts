@@ -192,8 +192,7 @@ const failureStatus = (inputs: StatusInput): Stream<boolean> => {
       }),
   );
 
-  // 変化があったときのみ発火するストリーム
-  // 本当はストリームが発火するタイミングをもっと絞り込めるけれど、デバッグ出力との兼ね合いでこんな実装にした
+  // 本当はsnapshot, filter, mapは省略できるが、デバッグ出力のために残している
   const s_filterdFailureStatus = s_newFailureStatus
     .snapshot(cloop_failureStatus, (newStatus, oldStatus) => {
       return {
