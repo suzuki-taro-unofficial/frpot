@@ -6,7 +6,7 @@ const main = () => {
   const ssink_tick = new StreamSink<number>();
 
   setInterval(() => {
-    ssink_tick.send(Date.now());
+    ssink_tick.send(200);
   }, 200);
 
   const root = app(ssink_tick);
