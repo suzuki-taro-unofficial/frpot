@@ -1,10 +1,7 @@
 import { expect, test } from "vitest";
 import { error_temperature_not_increased } from "./error";
 import { Cell, StreamSink, Transaction, Unit } from "sodiumjs";
-
-const s_to_ms = (s: number): number => {
-  return s * 1000;
-};
+import { Time } from "@/util";
 
 test("temperature increased correctly", () => {
   const s_tick = new StreamSink<number>();
@@ -22,13 +19,13 @@ test("temperature increased correctly", () => {
   s_error.listen((u) => out.push(u));
 
   s_temperature.send(20);
-  s_tick.send(s_to_ms(180));
+  s_tick.send(Time.minute_to_ms(3));
 
   s_temperature.send(40);
-  s_tick.send(s_to_ms(180));
+  s_tick.send(Time.minute_to_ms(3));
 
   s_temperature.send(60);
-  s_tick.send(s_to_ms(180));
+  s_tick.send(Time.minute_to_ms(3));
 
   expect(out).toEqual([]);
 });
@@ -51,12 +48,12 @@ test("temperature doesn't increased correctly", () => {
   // まず10度で3分経過させる
   // この時点で温度は10度上がることになるのでエラーは起きない
   s_temperature.send(10);
-  s_tick.send(s_to_ms(180));
+  s_tick.send(Time.minute_to_ms(3));
 
   // その後温度を5度下げて3分待つ
   // このときはエラーが発生する
   s_temperature.send(5);
-  s_tick.send(s_to_ms(180));
+  s_tick.send(Time.minute_to_ms(3));
 
   expect(out).toEqual([Unit.UNIT]);
 });

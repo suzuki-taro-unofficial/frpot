@@ -5,3 +5,15 @@ const beepAudio = new Audio(
 export const beep = () => {
   beepAudio.play();
 };
+
+export class Time {
+  static hour_to_ms = (h: number): number => {
+    return h * 60 * 60 * 1000;
+  };
+  static minute_to_ms = (m: number): number => {
+    return m * 60 * 1000;
+  };
+  static second_to_ms = (s: number): number => {
+    return s * 1000;
+  };
+}
