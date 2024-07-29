@@ -22,13 +22,13 @@ test("temperature increased correctly", () => {
   s_error.listen((u) => out.push(u));
 
   s_temperature.send(20);
-  s_tick.send(s_to_ms(60));
+  s_tick.send(s_to_ms(180));
 
   s_temperature.send(40);
-  s_tick.send(s_to_ms(60));
+  s_tick.send(s_to_ms(180));
 
   s_temperature.send(60);
-  s_tick.send(s_to_ms(60));
+  s_tick.send(s_to_ms(180));
 
   expect(out).toEqual([]);
 });
@@ -51,20 +51,12 @@ test("temperature doesn't increased correctly", () => {
   // まず10度で3分経過させる
   // この時点で温度は10度上がることになるのでエラーは起きない
   s_temperature.send(10);
-  s_tick.send(s_to_ms(60));
-  s_temperature.send(10);
-  s_tick.send(s_to_ms(60));
-  s_temperature.send(10);
-  s_tick.send(s_to_ms(60));
+  s_tick.send(s_to_ms(180));
 
   // その後温度を5度下げて3分待つ
   // このときはエラーが発生する
   s_temperature.send(5);
-  s_tick.send(s_to_ms(60));
-  s_temperature.send(5);
-  s_tick.send(s_to_ms(60));
-  s_temperature.send(5);
-  s_tick.send(s_to_ms(60));
+  s_tick.send(s_to_ms(180));
 
   expect(out).toEqual([Unit.UNIT]);
 });
