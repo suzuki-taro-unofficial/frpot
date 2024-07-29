@@ -303,34 +303,12 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     const s_new_status = s_failureStatus
       .filter((failure) => failure)
       .mapTo<Status>("Stop")
-      .map((a) => {
-        console.log("failureStatus", a);
-        return a;
-      })
       .orElse(
-        s_turnOnKeepWarm
-          .gate(c_lidClose)
-          .mapTo<Status>("KeepWarm")
-          .map((a) => {
-            console.log("keepWorm", a);
-            return a;
-          }),
+        inputs.s_lid.filter((lid) => lid === "Open").mapTo<Status>("Stop"),
       )
-      .orElse(
-        inputs.s_boilButtonClicked
-          .gate(c_lidClose)
-          .mapTo<Status>("Boil")
-          .map((a) => {
-            console.log("boilButton", a);
-            return a;
-          }),
-      )
-      .orElse(
-        s_lidClosed.mapTo<Status>("Boil").map((a) => {
-          console.log("lidClosed", a);
-          return a;
-        }),
-      )
+      .orElse(s_turnOnKeepWarm.gate(c_lidClose).mapTo<Status>("KeepWarm"))
+      .orElse(inputs.s_boilButtonClicked.gate(c_lidClose).mapTo<Status>("Boil"))
+      .orElse(s_lidClosed.mapTo<Status>("Boil"))
       .snapshot3(
         c_status,
         s_failureStatus.hold(true),
