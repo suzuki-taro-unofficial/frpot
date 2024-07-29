@@ -7,5 +7,6 @@ export default defineConfig({
       enabled: true,
       name: "chrome", // browser name is required
     },
+    globals: true,
   },
 });
