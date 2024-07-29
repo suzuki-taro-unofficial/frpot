@@ -87,6 +87,9 @@ export const simulator = ({
         c_amount,
         c_heaterPower,
         (currTime, prevTime, temp, amount, power) => {
+          temp -= 0.1 * ((currTime - prevTime) / 1000);
+          temp = Math.max(temp, 0);
+
           const joule = power * ((currTime - prevTime) / 1000);
           if (amount <= 10) {
             // 水の量が極端に少ないなら異常加熱
