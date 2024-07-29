@@ -16,36 +16,37 @@ export const heaterPower = ({
   c_status,
   c_temperature,
 }: heaterPowerInput): Cell<number> => {
-  return s_waterLevelSensor
-    .snapshot4(
+  const s_whenBoil = s_waterLevelSensor
+    .gate(c_status.map((s) => s === "Boil"))
+    .mapTo(5000);
+
+  const s_whenKeepWarm = s_waterLevelSensor
+    .gate(c_status.map((s) => s === "KeepWarm"))
+    .snapshot3(
       c_targetTemperature,
-      c_status,
       c_temperature,
-      (waterLevel, targetTemperature, status, temperature) => {
-        switch (status) {
-          case "Boil":
-            return 5000;
-          case "KeepWarm": {
-            if (targetTemperature - temperature < 0) return 0;
-            switch (waterLevel) {
-              case 0:
-                return 0;
-              case 1:
-                return (targetTemperature - temperature) ** 2 * 5;
-              case 2:
-                return (targetTemperature - temperature) ** 2 * 10;
-              case 3:
-                return (targetTemperature - temperature) ** 2 * 15;
-              case 4:
-                return (targetTemperature - temperature) ** 2 * 20;
-              default:
-                return 0;
-            }
-          }
-          case "Stop":
+      (waterLevel, targetTemperature, temperature) => {
+        if (targetTemperature - temperature < 0) return 0;
+        switch (waterLevel) {
+          case 0:
+            return 0;
+          case 1:
+            return (targetTemperature - temperature) ** 2 * 5;
+          case 2:
+            return (targetTemperature - temperature) ** 2 * 10;
+          case 3:
+            return (targetTemperature - temperature) ** 2 * 15;
+          case 4:
+            return (targetTemperature - temperature) ** 2 * 20;
+          default:
             return 0;
         }
       },
-    )
-    .hold(0);
+    );
+
+  const s_whenStop = s_waterLevelSensor
+    .gate(c_status.map((s) => s === "Stop"))
+    .mapTo(0);
+
+  return s_whenBoil.orElse(s_whenKeepWarm).orElse(s_whenStop).hold(0);
 };
