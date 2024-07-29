@@ -301,7 +301,7 @@ const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
     .snapshot1(c_time)
     .hold(0);
 
-  const c_3MinutesPassed = inputs.s_tick
+  const s_3MinutesPassed = inputs.s_tick
     .snapshot3<number, number, boolean>(
       c_time,
       c_100DegreeTime,
@@ -313,7 +313,7 @@ const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
     .filter((cond) => cond)
     .mapTo(new Unit());
 
-  return c_3MinutesPassed;
+  return s_3MinutesPassed;
 };
 
 export const status = (inputs: StatusInput): Stream<Status> => {
