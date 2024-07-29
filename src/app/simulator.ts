@@ -47,11 +47,11 @@ export const simulator = ({
   );
   const s_lidStateSensor = s_tick.snapshot1(c_lid);
 
-  const c_amount = new CellLoop<number>();
-  c_amount.loop(
+  const cloop_amount = new CellLoop<number>();
+  cloop_amount.loop(
     s_tick
       .snapshot5(
-        c_amount,
+        cloop_amount,
         c_waterIn,
         c_hotWaterSupply,
         c_lid,
@@ -67,12 +67,12 @@ export const simulator = ({
   );
 
   // 現在の水の温度で単位は°C
-  const c_temp = new CellLoop<number>();
-  c_temp.loop(
+  const cloop_temp = new CellLoop<number>();
+  cloop_temp.loop(
     s_tick
       .snapshot4(
-        c_temp,
-        c_amount,
+        cloop_temp,
+        cloop_amount,
         c_heaterPower,
         (deltaTime, temp, amount, power) => {
           temp -= 0.1 * (deltaTime / 1000);
@@ -91,12 +91,12 @@ export const simulator = ({
       .hold(80),
   );
 
-  const s_temperatureSensor = s_tick.snapshot(c_temp, (_, temp) => {
+  const s_temperatureSensor = s_tick.snapshot(cloop_temp, (_, temp) => {
     return temp;
   });
 
   const s_waterLevelSensor: Stream<WaterLevel> = s_tick.snapshot(
-    c_amount,
+    cloop_amount,
     (_, amount) => {
       if (4 * amount < capacity) {
         return 0;
@@ -112,7 +112,7 @@ export const simulator = ({
     },
   );
 
-  const s_waterOverflowSensor = s_tick.snapshot(c_amount, (_, amount) => {
+  const s_waterOverflowSensor = s_tick.snapshot(cloop_amount, (_, amount) => {
     return amount >= actualCapacity - 100;
   });
 

@@ -26,18 +26,18 @@ export const heaterPower = ({
       c_targetTemperature,
       c_temperature,
       (waterLevel, targetTemperature, temperature) => {
-        if (targetTemperature - temperature < 0) return 0;
+        if (targetTemperature - temperature < -0.5) return 0;
         switch (waterLevel) {
           case 0:
             return 0;
           case 1:
-            return (targetTemperature - temperature) ** 2 * 5;
+            return (targetTemperature - temperature + 1) ** 2 * 500;
           case 2:
-            return (targetTemperature - temperature) ** 2 * 10;
+            return (targetTemperature - temperature + 1) ** 2 * 1000;
           case 3:
-            return (targetTemperature - temperature) ** 2 * 15;
+            return (targetTemperature - temperature + 1) ** 2 * 1500;
           case 4:
-            return (targetTemperature - temperature) ** 2 * 20;
+            return (targetTemperature - temperature + 1) ** 2 * 2000;
           default:
             return 0;
         }
