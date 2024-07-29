@@ -151,7 +151,7 @@ const mergeFailureStatusUpdate: (
 
 // statusの各種停止状態について、それぞれの停止状態の条件が復旧されたかどうかを監視する
 // 障害状態と名付ける
-const failure_status = (inputs: StatusInput): Stream<boolean> => {
+const shouldStop = (inputs: StatusInput): Stream<boolean> => {
   const s_errorTemperatureTooHigh = errorTemperatureTooHighUpdate(inputs);
   const s_errorTemperatureNotIncreased =
     errorTemperatureNotIncreasedUpdate(inputs);
@@ -257,7 +257,7 @@ const failure_status = (inputs: StatusInput): Stream<boolean> => {
 
 // 保温状態に入るタイミングを監視する
 // 保温状態に切り替わるとき、一回だけ発火する
-const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
+const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
   // 100度に入った瞬間から時刻を計算し始める。
   const c_100DegreeTime = new CellLoop<number>();
   // もし100度以上なら可算をし、100度未満になったらリセットする
@@ -266,21 +266,22 @@ const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
       .snapshot<number, number>(c_100DegreeTime, (temp, time) => {
         return temp >= 100 ? time : 0;
       })
-      .orElse(inputs.s_tick.snapshot(c_100DegreeTime, (delta, time) => time + delta))
+      .orElse(
+        inputs.s_tick.snapshot(c_100DegreeTime, (delta, time) => time + delta),
+      )
       .hold(0),
   );
 
   // テストのため10秒にしている
   const threeMinutes = 10 * 1000;
   const s_turnOnWarmStatus = inputs.s_tick
-    .snapshot(
-      c_100DegreeTime,
-      (deltaTime, erapsedTime) => {
-        return {deltaTime, erapsedTime};
-      },
-    )
-    .filter(({deltaTime, erapsedTime}) => {
-      return erapsedTime + deltaTime >= threeMinutes && erapsedTime < threeMinutes;
+    .snapshot(c_100DegreeTime, (deltaTime, erapsedTime) => {
+      return { deltaTime, erapsedTime };
+    })
+    .filter(({ deltaTime, erapsedTime }) => {
+      return (
+        erapsedTime + deltaTime >= threeMinutes && erapsedTime < threeMinutes
+      );
     })
     .mapTo<Unit>(new Unit());
   return s_turnOnWarmStatus;
@@ -288,20 +289,20 @@ const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
 
 export const status = (inputs: StatusInput): Stream<Status> => {
   return Transaction.run(() => {
-    const s_failure = failure_status(inputs);
-    const s_keepWarm = keep_worm_status(inputs);
+    const s_shouldStop = shouldStop(inputs);
+    const s_turnOnKeepWarm = turnOnKeepWarm(inputs);
     const c_lidClose = inputs.s_lid.map((lid) => lid === "Close").hold(false);
     const c_status = new CellLoop<Status>();
-    const s_new_status = s_failure
+    const s_new_status = s_shouldStop
       .mapTo<Status>("Stop")
       .orElse(inputs.s_boilButtonClicked.gate(c_lidClose).mapTo<Status>("Boil"))
       .orElse(
         inputs.s_lid.filter((lid) => lid === "Close").mapTo<Status>("Boil"),
       )
-      .orElse(s_keepWarm.gate(c_lidClose).mapTo<Status>("KeepWarm"))
+      .orElse(s_turnOnKeepWarm.gate(c_lidClose).mapTo<Status>("KeepWarm"))
       .snapshot3(
         c_status,
-        s_failure.hold(true),
+        s_shouldStop.hold(true),
         (newStatus, prevStatus, failure) => {
           return {
             newStatus: failure ? "Stop" : newStatus,
