@@ -24,20 +24,20 @@ export const heaterPower = ({
       (waterLevel, targetTemperature, status, temperature) => {
         switch (status) {
           case "Boil":
-            return 100;
+            return 5000;
           case "KeepWarm": {
             if (targetTemperature - temperature < 0) return 0;
             switch (waterLevel) {
               case 0:
                 return 0;
               case 1:
-                return (targetTemperature - temperature) ** 2 / 4;
+                return (targetTemperature - temperature) ** 2 * 5;
               case 2:
-                return (targetTemperature - temperature) ** 2 / 2;
+                return (targetTemperature - temperature) ** 2 * 10;
               case 3:
-                return ((targetTemperature - temperature) ** 2 * 3) / 4;
+                return (targetTemperature - temperature) ** 2 * 15;
               case 4:
-                return (targetTemperature - temperature) ** 2;
+                return (targetTemperature - temperature) ** 2 * 20;
               default:
                 return 0;
             }
