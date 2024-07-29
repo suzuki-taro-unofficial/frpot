@@ -1,4 +1,4 @@
-import { Cell, CellLoop, Stream, Transaction, Unit } from "sodiumjs";
+import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
 
 type ErrorTemperatureNotIncreasedInput = {
   s_tick: Stream<number>;
