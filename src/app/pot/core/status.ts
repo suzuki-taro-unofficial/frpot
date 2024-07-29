@@ -30,12 +30,15 @@ type StatusInput = {
   - => 低温になれば良いので、s_temperatureSensorが一定値以下になったら復旧
 - 温度上がらずエラーのとき
   - => フタを開けて水を入れたりした可能性もあるので、フタが閉まったら復旧
-- フタが開いたとき
-  - => フタが閉まれば復旧。同時に沸騰状態へ移行
 - 満水センサがONのとき
   - => 満水センサがOFFになれば復旧。停止状態のままだけだけど、他のイベントによって沸騰状態に移行する
 - 水位が0のとき
   - => 水位が1以上に慣れば復旧。停止状態のままだけど、他のイベントによって沸騰状態に移行する
+
+### 特殊な管理をしているもの
+- フタが開いたとき
+  - => フタが閉まれば復旧。同時に沸騰状態へ移行
+  - 沸騰状態に入る条件の兼ね合いで、障害状態ではなくstatusで管理している
 
 ## 沸騰状態・保温状態について
 - 沸騰ボタンを押したとき、または、ふたが閉じられたとき、障害状態でなければ沸騰状態になる
@@ -48,7 +51,6 @@ type StatusInput = {
 type FailureStatusUpdate = {
   temperatureTooHigh: boolean | null;
   temperatureNotIncreased: boolean | null;
-  lidOpen: boolean | null;
   waterOverflow: boolean | null;
   waterLevelTooLow: boolean | null;
 };
@@ -60,7 +62,6 @@ const errorTemperatureTooHighUpdate = (
     .mapTo<FailureStatusUpdate>({
       temperatureTooHigh: true,
       temperatureNotIncreased: null,
-      lidOpen: null,
       waterOverflow: null,
       waterLevelTooLow: null,
     })
@@ -70,7 +71,6 @@ const errorTemperatureTooHighUpdate = (
         .mapTo<FailureStatusUpdate>({
           temperatureTooHigh: false,
           temperatureNotIncreased: null,
-          lidOpen: null,
           waterOverflow: null,
           waterLevelTooLow: null,
         }),
@@ -84,7 +84,6 @@ const errorTemperatureNotIncreasedUpdate = (
     .mapTo<FailureStatusUpdate>({
       temperatureTooHigh: null,
       temperatureNotIncreased: true,
-      lidOpen: null,
       waterOverflow: null,
       waterLevelTooLow: null,
     })
@@ -94,23 +93,10 @@ const errorTemperatureNotIncreasedUpdate = (
         .mapTo<FailureStatusUpdate>({
           temperatureTooHigh: null,
           temperatureNotIncreased: false,
-          lidOpen: null,
           waterOverflow: null,
           waterLevelTooLow: null,
         }),
     );
-};
-
-const s_lidOpenUpdate = (inputs: StatusInput): Stream<FailureStatusUpdate> => {
-  return inputs.s_lid.map<FailureStatusUpdate>((lid) => {
-    return {
-      temperatureTooHigh: null,
-      temperatureNotIncreased: null,
-      lidOpen: lid === "Open",
-      waterOverflow: null,
-      waterLevelTooLow: null,
-    };
-  });
 };
 
 const s_waterOverflowUpdate = (
@@ -120,7 +106,6 @@ const s_waterOverflowUpdate = (
     return {
       temperatureTooHigh: null,
       temperatureNotIncreased: null,
-      lidOpen: null,
       waterOverflow: cond,
       waterLevelTooLow: null,
     };
@@ -135,7 +120,6 @@ const s_waterLevelTooLowUpdate = (
     .mapTo<FailureStatusUpdate>({
       temperatureTooHigh: null,
       temperatureNotIncreased: null,
-      lidOpen: null,
       waterOverflow: null,
       waterLevelTooLow: true,
     })
@@ -145,7 +129,6 @@ const s_waterLevelTooLowUpdate = (
         .mapTo<FailureStatusUpdate>({
           temperatureTooHigh: null,
           temperatureNotIncreased: null,
-          lidOpen: null,
           waterOverflow: null,
           waterLevelTooLow: false,
         }),
@@ -161,7 +144,6 @@ const mergeFailureStatusUpdate: (
     temperatureTooHigh: a.temperatureTooHigh ?? b.temperatureTooHigh,
     temperatureNotIncreased:
       a.temperatureNotIncreased ?? b.temperatureNotIncreased,
-    lidOpen: a.lidOpen ?? b.lidOpen,
     waterOverflow: a.waterOverflow ?? b.waterOverflow,
     waterLevelTooLow: a.waterLevelTooLow ?? b.waterLevelTooLow,
   };
@@ -173,21 +155,18 @@ const failure_status = (inputs: StatusInput): Stream<boolean> => {
   const s_errorTemperatureTooHigh = errorTemperatureTooHighUpdate(inputs);
   const s_errorTemperatureNotIncreased =
     errorTemperatureNotIncreasedUpdate(inputs);
-  const s_lidOpen = s_lidOpenUpdate(inputs);
   const s_waterOverflow = s_waterOverflowUpdate(inputs);
   const s_waterLevelTooLow = s_waterLevelTooLowUpdate(inputs);
 
   const c_failureStatus = new CellLoop<{
     temperatureTooHigh: boolean;
     temperatureNotIncreased: boolean;
-    lidOpen: boolean;
     waterOverflow: boolean;
     waterLevelTooLow: boolean;
   }>();
 
   const s_newFailureStatus = s_errorTemperatureTooHigh
     .merge(s_errorTemperatureNotIncreased, mergeFailureStatusUpdate)
-    .merge(s_lidOpen, mergeFailureStatusUpdate)
     .merge(s_waterOverflow, mergeFailureStatusUpdate)
     .merge(s_waterLevelTooLow, mergeFailureStatusUpdate);
 
@@ -200,7 +179,6 @@ const failure_status = (inputs: StatusInput): Stream<boolean> => {
           temperatureNotIncreased:
             newStatus.temperatureNotIncreased ??
             oldStatus.temperatureNotIncreased,
-          lidOpen: newStatus.lidOpen ?? oldStatus.lidOpen,
           waterOverflow: newStatus.waterOverflow ?? oldStatus.waterOverflow,
           waterLevelTooLow:
             newStatus.waterLevelTooLow ?? oldStatus.waterLevelTooLow,
@@ -209,7 +187,6 @@ const failure_status = (inputs: StatusInput): Stream<boolean> => {
       .hold({
         temperatureTooHigh: false,
         temperatureNotIncreased: false,
-        lidOpen: false,
         waterOverflow: false,
         waterLevelTooLow: false,
       }),
@@ -227,8 +204,6 @@ const failure_status = (inputs: StatusInput): Stream<boolean> => {
           newStatus.temperatureNotIncreased ??
           oldStatus.temperatureNotIncreased,
         temperatureNotIncreasedOld: oldStatus.temperatureNotIncreased,
-        lidOpenNew: newStatus.lidOpen ?? oldStatus.lidOpen,
-        lidOpenOld: oldStatus.lidOpen,
         waterOverflowNew: newStatus.waterOverflow ?? oldStatus.waterOverflow,
         waterOverflowOld: oldStatus.waterOverflow,
         waterLevelTooLowNew:
@@ -242,8 +217,6 @@ const failure_status = (inputs: StatusInput): Stream<boolean> => {
         temperatureTooHighOld,
         temperatureNotIncreasedNew,
         temperatureNotIncreasedOld,
-        lidOpenNew,
-        lidOpenOld,
         waterOverflowNew,
         waterOverflowOld,
         waterLevelTooLowNew,
@@ -252,7 +225,6 @@ const failure_status = (inputs: StatusInput): Stream<boolean> => {
         return (
           temperatureTooHighNew !== temperatureTooHighOld ||
           temperatureNotIncreasedNew !== temperatureNotIncreasedOld ||
-          lidOpenNew !== lidOpenOld ||
           waterOverflowNew !== waterOverflowOld ||
           waterLevelTooLowNew !== waterLevelTooLowOld
         );
@@ -262,21 +234,18 @@ const failure_status = (inputs: StatusInput): Stream<boolean> => {
       ({
         temperatureTooHighNew,
         temperatureNotIncreasedNew,
-        lidOpenNew,
         waterOverflowNew,
         waterLevelTooLowNew,
       }) => {
         console.log({
           temperatureTooHigh: temperatureTooHighNew,
           temperatureNotIncreased: temperatureNotIncreasedNew,
-          lidOpen: lidOpenNew,
           waterOverflow: waterOverflowNew,
           waterLevelTooLow: waterLevelTooLowNew,
         });
         return (
           temperatureTooHighNew ||
           temperatureNotIncreasedNew ||
-          lidOpenNew ||
           waterOverflowNew ||
           waterLevelTooLowNew
         );
@@ -320,14 +289,15 @@ export const status = (inputs: StatusInput): Stream<Status> => {
   return Transaction.run(() => {
     const s_failure = failure_status(inputs);
     const s_keepWarm = keep_worm_status(inputs);
+    const c_lidClose = inputs.s_lid.map((lid) => lid === "Close").hold(false);
     const c_status = new CellLoop<Status>();
     const s_new_status = s_failure
       .mapTo<Status>("Stop")
-      .orElse(inputs.s_boilButtonClicked.mapTo<Status>("Boil"))
+      .orElse(inputs.s_boilButtonClicked.gate(c_lidClose).mapTo<Status>("Boil"))
       .orElse(
         inputs.s_lid.filter((lid) => lid === "Close").mapTo<Status>("Boil"),
       )
-      .orElse(s_keepWarm.mapTo<Status>("KeepWarm"))
+      .orElse(s_keepWarm.gate(c_lidClose).mapTo<Status>("KeepWarm"))
       .snapshot3(
         c_status,
         s_failure.hold(true),
