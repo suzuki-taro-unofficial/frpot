@@ -31,13 +31,25 @@ export const heaterPower = ({
           case 0:
             return 0;
           case 1:
-            return (targetTemperature - temperature + 1) ** 2 * 500;
+            return Math.min(
+              (targetTemperature - temperature + 1) ** 2 * 500,
+              5000,
+            );
           case 2:
-            return (targetTemperature - temperature + 1) ** 2 * 1000;
+            return Math.min(
+              (targetTemperature - temperature + 1) ** 2 * 1000,
+              5000,
+            );
           case 3:
-            return (targetTemperature - temperature + 1) ** 2 * 1500;
+            return Math.min(
+              (targetTemperature - temperature + 1) ** 2 * 1500,
+              5000,
+            );
           case 4:
-            return (targetTemperature - temperature + 1) ** 2 * 2000;
+            return Math.min(
+              (targetTemperature - temperature + 1) ** 2 * 2000,
+              5000,
+            );
           default:
             return 0;
         }
