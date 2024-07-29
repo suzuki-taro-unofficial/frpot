@@ -307,11 +307,15 @@ export const status = (inputs: StatusInput): Stream<Status> => {
         console.log("failureStatus", a);
         return a;
       })
-      .orElse(inputs.s_boilButtonClicked.gate(c_lidClose).mapTo<Status>("Boil"))
-      .map((a) => {
-        console.log("boilButton", a);
-        return a;
-      })
+      .orElse(
+        inputs.s_boilButtonClicked
+          .gate(c_lidClose)
+          .mapTo<Status>("Boil")
+          .map((a) => {
+            console.log("boilButton", a);
+            return a;
+          }),
+      )
       .orElse(
         s_lidClosed.mapTo<Status>("Boil").map((a) => {
           console.log("lidClosed", a);
