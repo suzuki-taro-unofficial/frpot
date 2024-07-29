@@ -294,21 +294,31 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     const c_lidClose = inputs.s_lid.map((lid) => lid === "Close").hold(false);
     const c_status = new CellLoop<Status>();
     const c_prevLid = inputs.s_lid.hold("Open");
-    const s_lidClosed = inputs.s_lid
+
+    const s_failureStatusToStop = s_failureStatus
+      .filter((failure) => failure)
+      .mapTo<Status>("Stop");
+    const s_lidOpenToStop = inputs.s_lid
+      .filter((lid) => lid === "Open")
+      .mapTo<Status>("Stop");
+    const s_turnOnKeepWarmToKeepWarm =
+      s_turnOnKeepWarm.mapTo<Status>("KeepWarm");
+    const s_boilButtonClickedToBoil = inputs.s_boilButtonClicked
+      .gate(c_lidClose)
+      .mapTo<Status>("Boil");
+    const s_lidClosedToBoil = inputs.s_lid
       .snapshot(c_prevLid, (newLid, prevLid) => {
         return newLid === "Close" && prevLid === "Open";
       })
       .filter((a) => a)
-      .mapTo<Unit>(new Unit());
-    const s_new_status = s_failureStatus
-      .filter((failure) => failure)
-      .mapTo<Status>("Stop")
-      .orElse(
-        inputs.s_lid.filter((lid) => lid === "Open").mapTo<Status>("Stop"),
-      )
-      .orElse(s_turnOnKeepWarm.gate(c_lidClose).mapTo<Status>("KeepWarm"))
-      .orElse(inputs.s_boilButtonClicked.gate(c_lidClose).mapTo<Status>("Boil"))
-      .orElse(s_lidClosed.mapTo<Status>("Boil"))
+      .mapTo<Status>("Boil");
+
+    const s_newStatusMerged = s_failureStatusToStop
+      .orElse(s_lidOpenToStop)
+      .orElse(s_turnOnKeepWarmToKeepWarm)
+      .orElse(s_boilButtonClickedToBoil)
+      .orElse(s_lidClosedToBoil);
+    const s_newStatusFiltered = s_newStatusMerged
       .snapshot3(
         c_status,
         s_failureStatus.hold(true),
@@ -321,7 +331,8 @@ export const status = (inputs: StatusInput): Stream<Status> => {
       )
       .filter(({ prevStatus, newStatus }) => prevStatus !== newStatus)
       .map(({ newStatus }) => newStatus);
-    c_status.loop(s_new_status.hold("Stop"));
-    return s_new_status;
+
+    c_status.loop(s_newStatusFiltered.hold("Stop"));
+    return s_newStatusFiltered;
   });
 };
