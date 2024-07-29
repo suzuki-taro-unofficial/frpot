@@ -12,17 +12,19 @@ export const error_temperature_not_increased = ({
   s_temperature,
   c_targetTemp,
 }: ErrorTemperatureNotIncreasedInput): Stream<Unit> => {
-  const c_prevTime = new CellLoop<number>();
-  const s_oneMinutesPassed = s_tick
-    .snapshot(c_prevTime, (currTime, prevTime) => {
-      if (currTime - prevTime >= 60 * 1000) {
-        return currTime;
+  const c_currAccTime = new CellLoop<number>();
+  const s_timeManage = s_tick.snapshot(
+    c_currAccTime,
+    (deltaTime, currAccTime) => {
+      if (deltaTime + currAccTime >= 60 * 1000) {
+        return { cond: true, next_time: 0 };
       } else {
-        return null;
+        return { cond: false, next_time: deltaTime + currAccTime };
       }
-    })
-    .filterNotNull() as Stream<number>;
-  c_prevTime.loop(s_oneMinutesPassed.hold(Date.now()));
+    },
+  );
+  const s_oneMinutesPassed = s_timeManage.filter(({ cond }) => cond);
+  c_currAccTime.loop(s_timeManage.map(({ next_time }) => next_time).hold(0));
 
   const c_currTemp = s_temperature.hold(0);
   const c_prevTemp = s_oneMinutesPassed.snapshot1(c_currTemp).hold(0);
