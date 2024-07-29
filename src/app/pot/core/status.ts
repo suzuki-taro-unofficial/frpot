@@ -256,33 +256,34 @@ const failure_status = (inputs: StatusInput): Stream<boolean> => {
 };
 
 // 保温状態に入るタイミングを監視する
+// 保温状態に切り替わるとき、一回だけ発火する
 const keep_worm_status = (inputs: StatusInput): Stream<Unit> => {
-  // 100度未満の状態->100度以上の状態になった時刻を持つ
-  // その時刻から3分経ってない状態->3分経過した状態になったとき、戻り値のストリームを発火する
-  const c_temperature = inputs.s_temperatureSensor.hold(0);
-  const c_time = inputs.s_tick.hold(0);
+  // 100度に入った瞬間から時刻を計算し始める。
+  const c_100DegreeTime = new CellLoop<number>();
+  // もし100度以上なら可算をし、100度未満になったらリセットする
+  c_100DegreeTime.loop(
+    inputs.s_temperatureSensor
+      .snapshot<number, number>(c_100DegreeTime, (temp, time) => {
+        return temp >= 100 ? time : 0;
+      })
+      .orElse(inputs.s_tick.snapshot(c_100DegreeTime, (delta, time) => time + delta))
+      .hold(0),
+  );
 
-  const c_100DegreeTime = inputs.s_temperatureSensor
-    .snapshot(c_temperature, (newTemp, oldTemp) => {
-      return { newTemp: newTemp, oldTemp: oldTemp };
-    })
-    .filter(({ newTemp, oldTemp }) => oldTemp < 100 && newTemp >= 100)
-    .snapshot1(c_time)
-    .hold(0);
-
-  const s_3MinutesPassed = inputs.s_tick
-    .snapshot3<number, number, boolean>(
-      c_time,
+  // テストのため10秒にしている
+  const threeMinutes = 10 * 1000;
+  const s_turnOnWarmStatus = inputs.s_tick
+    .snapshot(
       c_100DegreeTime,
-      (currTime, prevTime, degreeTime) => {
-        const targetTime = degreeTime + 3 * 60 * 1000;
-        return prevTime < targetTime && currTime >= targetTime;
+      (deltaTime, erapsedTime) => {
+        return {deltaTime, erapsedTime};
       },
     )
-    .filter((cond) => cond)
-    .mapTo(new Unit());
-
-  return s_3MinutesPassed;
+    .filter(({deltaTime, erapsedTime}) => {
+      return erapsedTime + deltaTime >= threeMinutes && erapsedTime < threeMinutes;
+    })
+    .mapTo<Unit>(new Unit());
+  return s_turnOnWarmStatus;
 };
 
 export const status = (inputs: StatusInput): Stream<Status> => {
