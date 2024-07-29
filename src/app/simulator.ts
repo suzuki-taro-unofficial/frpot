@@ -1,5 +1,6 @@
 import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
 import { LidState, WaterLevel } from "./types";
+import { clamp } from "../util";
 
 // TODO:
 // 水量や熱量などの単位をどうするか
@@ -18,16 +19,6 @@ type Output = {
   s_waterLevelSensor: Stream<WaterLevel>;
   s_waterOverflowSensor: Stream<boolean>;
   s_lidStateSensor: Stream<LidState>;
-};
-
-const clamp = (v: number, l: number, r: number): number => {
-  if (v < l) {
-    return l;
-  } else if (v > r) {
-    return r;
-  } else {
-    return v;
-  }
 };
 
 export const simulator = ({

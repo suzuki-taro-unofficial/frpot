@@ -308,6 +308,24 @@ export const status = (inputs: StatusInput): Stream<Status> => {
         return a;
       })
       .orElse(
+        inputs.s_lid
+          .filter((lid) => lid === "Open")
+          .mapTo<Status>("Stop")
+          .map((a) => {
+            console.log("lidOpen", a);
+            return a;
+          }),
+      )
+      .orElse(
+        s_turnOnKeepWarm
+          .gate(c_lidClose)
+          .mapTo<Status>("KeepWarm")
+          .map((a) => {
+            console.log("keepWorm", a);
+            return a;
+          }),
+      )
+      .orElse(
         inputs.s_boilButtonClicked
           .gate(c_lidClose)
           .mapTo<Status>("Boil")
@@ -321,15 +339,6 @@ export const status = (inputs: StatusInput): Stream<Status> => {
           console.log("lidClosed", a);
           return a;
         }),
-      )
-      .orElse(
-        s_turnOnKeepWarm
-          .gate(c_lidClose)
-          .mapTo<Status>("KeepWarm")
-          .map((a) => {
-            console.log("keepWorm", a);
-            return a;
-          }),
       )
       .snapshot3(
         c_status,
