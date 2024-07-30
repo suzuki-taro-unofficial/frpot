@@ -209,7 +209,7 @@ const failureStatus = (inputs: StatusInput): Stream<boolean> => {
 // 100度に到達した後、3分ごとに発火する
 const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
   const s_under100Degree = inputs.s_temperatureSensor
-    .filter((t) => t < 100 - 2) // +-2度の誤差を許容
+    .filter((t) => t < 100 - 1) // -1度の誤差を許容する
     .mapTo(Unit.UNIT);
 
   return Time.ms_passed(

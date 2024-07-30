@@ -84,18 +84,18 @@ export const core = ({
     c_targetTemp: c_targetTemperature,
   });
 
-  cloop_status.loop(
-    status({
-      s_boilButtonClicked,
-      s_tick,
-      s_lid: s_lidStateSensor,
-      s_waterLevelSensor,
-      s_temperatureSensor,
-      s_waterOverflowSensor,
-      s_errorTemperatureTooHigh,
-      s_errorTemperatureNotIncreased,
-    }).hold("Stop"),
-  );
+  const s_status = status({
+    s_boilButtonClicked,
+    s_tick,
+    s_lid: s_lidStateSensor,
+    s_waterLevelSensor,
+    s_temperatureSensor,
+    s_waterOverflowSensor,
+    s_errorTemperatureTooHigh,
+    s_errorTemperatureNotIncreased,
+  });
+
+  cloop_status.loop(s_status.hold("Stop"));
 
   const c_heaterPower = heaterPower({
     s_waterLevelSensor,
@@ -115,7 +115,7 @@ export const core = ({
 
   const s_beep = beep({
     s_timer: s_timerZero,
-    s_boiled: new Stream(),
+    s_boiled: s_status.filter((v) => v === "KeepWarm").mapTo(Unit.UNIT),
     s_errorTemperatureTooHigh,
     s_errorTemperatureNotIncreased,
     s_boilButtonClicked,
