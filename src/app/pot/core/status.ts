@@ -237,7 +237,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
   const cloop_prevStatus = new CellLoop<Status>();
 
   type StatusUpdate = {
-    newStatus: Status;
+    status: Status;
     failure: boolean;
   };
   const s_boilButtonClickedStatus =
@@ -248,9 +248,9 @@ export const status = (inputs: StatusInput): Stream<Status> => {
   const s_mergedUpdate = s_boilButtonClickedStatus
     .orElse(s_lidCloseStatus)
     .orElse(s_turnOnKeepWarmStatus)
-    .snapshot<boolean, StatusUpdate>(c_failureStatus, (newStatus, failure) => {
+    .snapshot<boolean, StatusUpdate>(c_failureStatus, (status, failure) => {
       return {
-        newStatus,
+        status,
         failure,
       };
     });
@@ -259,7 +259,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     cloop_prevStatus,
     (failure, prevStatus) => {
       return {
-        newStatus: prevStatus,
+        status: prevStatus,
         failure,
       };
     },
@@ -268,12 +268,12 @@ export const status = (inputs: StatusInput): Stream<Status> => {
   const s_newStatus = s_mergedUpdate
     .merge(s_failureStatusUpdate, (other, failure) => {
       return {
-        newStatus: other.newStatus,
+        status: other.status,
         failure: failure.failure,
       };
     })
-    .map(({ newStatus, failure }) => {
-      return failure ? "Stop" : newStatus;
+    .map(({ status, failure }) => {
+      return failure ? "Stop" : status;
     });
 
   cloop_prevStatus.loop(s_newStatus.hold("Stop"));
