@@ -246,7 +246,6 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     boolean,
     StatusUpdate
   >(c_failureStatus, (_, failure) => {
-    console.log("boilButtonClicked", failure);
     return {
       newStatus: "Boil",
       failure,
@@ -255,7 +254,6 @@ export const status = (inputs: StatusInput): Stream<Status> => {
   const s_lidCloseUpdate = s_lidClose.snapshot<boolean, StatusUpdate>(
     c_failureStatus,
     (_, failure) => {
-      console.log("lidClose", failure);
       return {
         newStatus: "Boil",
         failure,
@@ -266,7 +264,6 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     boolean,
     StatusUpdate
   >(c_failureStatus, (_, failure) => {
-    console.log("turnOnKeepWarm", failure);
     return {
       newStatus: "KeepWarm",
       failure,
@@ -275,7 +272,6 @@ export const status = (inputs: StatusInput): Stream<Status> => {
   const s_failureStatusUpdate = s_failureStatus.snapshot<Status, StatusUpdate>(
     cloop_prevStatus,
     (failure, prevStatus) => {
-      console.log("failureStatus", failure);
       return {
         newStatus: prevStatus,
         failure,
@@ -307,7 +303,6 @@ export const status = (inputs: StatusInput): Stream<Status> => {
       return newStatus !== prevStatus;
     })
     .map(({ newStatus }) => {
-      console.log("newStatus", newStatus);
       return newStatus;
     });
 };
