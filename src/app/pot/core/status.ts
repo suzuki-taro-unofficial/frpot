@@ -221,19 +221,23 @@ const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
   );
 };
 
+const lidClose = (lid: Stream<LidState>): Stream<Unit> => {
+  const c_prevLid = lid.hold("Open");
+  return lid
+    .snapshot(c_prevLid, (newLid, prevLid) => {
+      return newLid === "Close" && prevLid === "Open";
+    })
+    .filter((v) => v)
+    .mapTo(Unit.UNIT);
+}
+
 // 他のストリームは常時更新されるが、statusは更新されるときだけ更新される
 export const status = (inputs: StatusInput): Stream<Status> => {
   // デフォルト値にc_failureStatusを使いs_failureStatusが発火したときはs_failureStatusを使う
   const s_failureStatus = failureStatus(inputs);
   const c_failureStatus = s_failureStatus.hold(false);
   const s_turnOnKeepWarm = turnOnKeepWarm(inputs);
-  const c_prevLid = inputs.s_lid.hold("Open");
-  const s_lidClose = inputs.s_lid
-    .snapshot(c_prevLid, (newLid, prevLid) => {
-      return newLid === "Close" && prevLid === "Open";
-    })
-    .filter((v) => v)
-    .mapTo(Unit.UNIT);
+  const s_lidClose = lidClose(inputs.s_lid);
   const cloop_prevStatus = new CellLoop<Status>();
 
   type StatusUpdate = {
