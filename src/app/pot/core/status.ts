@@ -49,10 +49,10 @@ type StatusInput = {
 // 各種ストリームをこの更新用の型に変換する
 // 更新しない場合はnullを入れる
 type FailureStatusUpdate = {
-  temperatureTooHigh: boolean | null;
-  temperatureNotIncreased: boolean | null;
-  waterOverflow: boolean | null;
-  waterLevelTooLow: boolean | null;
+  temperatureTooHigh?: boolean;
+  temperatureNotIncreased?: boolean;
+  waterOverflow?: boolean;
+  waterLevelTooLow?: boolean;
 };
 
 const errorTemperatureTooHighUpdate = (
@@ -61,18 +61,12 @@ const errorTemperatureTooHighUpdate = (
   return inputs.s_errorTemperatureTooHigh
     .mapTo<FailureStatusUpdate>({
       temperatureTooHigh: true,
-      temperatureNotIncreased: null,
-      waterOverflow: null,
-      waterLevelTooLow: null,
     })
     .orElse(
       inputs.s_temperatureSensor
         .filter((temp) => temp < 100)
         .mapTo<FailureStatusUpdate>({
           temperatureTooHigh: false,
-          temperatureNotIncreased: null,
-          waterOverflow: null,
-          waterLevelTooLow: null,
         }),
     );
 };
@@ -82,19 +76,13 @@ const errorTemperatureNotIncreasedUpdate = (
 ): Stream<FailureStatusUpdate> => {
   return inputs.s_errorTemperatureNotIncreased
     .mapTo<FailureStatusUpdate>({
-      temperatureTooHigh: null,
       temperatureNotIncreased: true,
-      waterOverflow: null,
-      waterLevelTooLow: null,
     })
     .orElse(
       inputs.s_lid
         .filter((lid) => lid === "Close")
         .mapTo<FailureStatusUpdate>({
-          temperatureTooHigh: null,
           temperatureNotIncreased: false,
-          waterOverflow: null,
-          waterLevelTooLow: null,
         }),
     );
 };
@@ -104,10 +92,7 @@ const s_waterOverflowUpdate = (
 ): Stream<FailureStatusUpdate> => {
   return inputs.s_waterOverflowSensor.map<FailureStatusUpdate>((cond) => {
     return {
-      temperatureTooHigh: null,
-      temperatureNotIncreased: null,
       waterOverflow: cond,
-      waterLevelTooLow: null,
     };
   });
 };
@@ -118,18 +103,12 @@ const s_waterLevelTooLowUpdate = (
   return inputs.s_waterLevelSensor
     .filter((level) => level === 0)
     .mapTo<FailureStatusUpdate>({
-      temperatureTooHigh: null,
-      temperatureNotIncreased: null,
-      waterOverflow: null,
       waterLevelTooLow: true,
     })
     .orElse(
       inputs.s_waterLevelSensor
         .filter((level) => level > 0)
         .mapTo<FailureStatusUpdate>({
-          temperatureTooHigh: null,
-          temperatureNotIncreased: null,
-          waterOverflow: null,
           waterLevelTooLow: false,
         }),
     );
