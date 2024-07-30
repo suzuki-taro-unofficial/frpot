@@ -1,6 +1,7 @@
-import { Stream, Unit, CellLoop, Transaction } from "sodiumjs";
+import { Stream, Unit, CellLoop, Transaction, Cell } from "sodiumjs";
 import { LidState, WaterLevel } from "../../types";
 import { Status } from "../types";
+import { Time } from "@/util";
 
 type StatusInput = {
   s_temperatureSensor: Stream<number>;
@@ -236,33 +237,17 @@ const failureStatus = (inputs: StatusInput): Stream<boolean> => {
 // 保温状態に入るタイミングを監視する
 // 保温状態に切り替わるとき、一回だけ発火する
 const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
-  // 100度に入った瞬間から時刻を計算し始める。
-  const cloop_100DegreeTime = new CellLoop<number>();
-  // もし100度以上なら可算をし、100度未満になったらリセットする
-  cloop_100DegreeTime.loop(
-    inputs.s_temperatureSensor
-      .snapshot<number, number>(cloop_100DegreeTime, (temp, time) => {
-        return temp >= 100 ? time : 0;
-      })
-      .merge(inputs.s_tick, (erapsedTime, deltaTime) => {
-        return erapsedTime + deltaTime;
-      })
-      .hold(0),
-  );
+  const s_under100Degree = inputs.s_temperatureSensor
+    .filter((t) => t <= 100)
+    .mapTo(Unit.UNIT);
 
-  // テストのため10秒にしている
-  const threeMinutes = 10 * 1000;
-  const s_turnOnWarmStatus = inputs.s_tick
-    .snapshot(cloop_100DegreeTime, (deltaTime, erapsedTime) => {
-      return { deltaTime, erapsedTime };
-    })
-    .filter(({ deltaTime, erapsedTime }) => {
-      return (
-        erapsedTime < threeMinutes && threeMinutes <= erapsedTime + deltaTime
-      );
-    })
-    .mapTo<Unit>(new Unit());
-  return s_turnOnWarmStatus;
+  return Time.ms_passed(
+    // テストのため10秒にしている
+    Time.second_to_ms(10),
+    inputs.s_tick,
+    // 100度以下の時は計測をリセット
+    s_under100Degree,
+  );
 };
 
 export const status = (inputs: StatusInput): Stream<Status> => {
