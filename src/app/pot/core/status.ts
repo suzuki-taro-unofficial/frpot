@@ -236,8 +236,6 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     .mapTo(Unit.UNIT);
   const cloop_prevStatus = new CellLoop<Status>();
 
-  // failureStatusからfalseが発火するのと、lidOpenが発火するのは同時
-  // なので、各沸騰・保温のストリームが発火するときにc_failureStatusを見るだけではいけない
   type StatusUpdate = {
     newStatus: Status;
     failure: boolean;
@@ -246,6 +244,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     inputs.s_boilButtonClicked.mapTo<Status>("Boil");
   const s_lidCloseStatus = s_lidClose.mapTo<Status>("Boil");
   const s_turnOnKeepWarmStatus = s_turnOnKeepWarm.mapTo<Status>("KeepWarm");
+  // 沸騰・保温のストリームが発火したときは、新しいstatusと古いfailureStatusを使う
   const s_mergedUpdate = s_boilButtonClickedStatus
     .orElse(s_lidCloseStatus)
     .orElse(s_turnOnKeepWarmStatus)
@@ -255,6 +254,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
         failure,
       };
     });
+  // failureStatusが発火したときは、前回のstatusと新しいfailureStatusを使う
   const s_failureStatusUpdate = s_failureStatus.snapshot<Status, StatusUpdate>(
     cloop_prevStatus,
     (failure, prevStatus) => {
@@ -264,7 +264,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
       };
     },
   );
-
+  // 沸騰・保温のストリームとfailureStatusが同時に起こったとき(フタを閉めたときなど、よく発生する)は、新しい情報を使う
   const s_newStatus = s_mergedUpdate
     .merge(s_failureStatusUpdate, (other, failure) => {
       return {
@@ -275,7 +275,9 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     .map(({ newStatus, failure }) => {
       return failure ? "Stop" : newStatus;
     });
+
   cloop_prevStatus.loop(s_newStatus.hold("Stop"));
+  // このストリームは、statusが更新されたときだけ発火する
   return s_newStatus
     .snapshot(cloop_prevStatus, (newStatus, prevStatus) => {
       return {
