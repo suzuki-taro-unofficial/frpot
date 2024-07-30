@@ -1,4 +1,4 @@
-import { Stream, Unit, CellLoop, Transaction, Cell } from "sodiumjs";
+import { Stream, Unit, CellLoop, Transaction } from "sodiumjs";
 import { LidState, WaterLevel } from "../../types";
 import { Status } from "../types";
 import { Time } from "@/util";
