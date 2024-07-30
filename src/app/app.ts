@@ -3,7 +3,7 @@ import { simulator } from "./simulator";
 import { pot } from "./pot/pot";
 import { CellLoop, Stream, Transaction } from "sodiumjs";
 import { Button, Display, HStack, Lamp, Meter, VStack } from "@/components";
-import { beep } from "@/util";
+import { beep } from "@/util/beep";
 
 export const app = (s_tick: Stream<number>): ViewItem => {
   // 入力のユーザインタフェース生成

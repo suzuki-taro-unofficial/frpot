@@ -1,6 +1,6 @@
 import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
 import { LidState, WaterLevel } from "./types";
-import { clamp } from "../util";
+import { clamp } from "@/util/util";
 
 // TODO:
 // 水量や熱量などの単位をどうするか

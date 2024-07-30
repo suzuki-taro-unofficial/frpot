@@ -1,4 +1,5 @@
-import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
+import { Time } from "@/util/time";
+import { Cell, Stream, Unit } from "sodiumjs";
 
 type ErrorTemperatureNotIncreasedInput = {
   s_tick: Stream<number>;
@@ -12,21 +13,7 @@ export const error_temperature_not_increased = ({
   s_temperature,
   c_targetTemp,
 }: ErrorTemperatureNotIncreasedInput): Stream<Unit> => {
-  const cloop_currAccTime = new CellLoop<number>();
-  const s_timeManage = s_tick.snapshot(
-    cloop_currAccTime,
-    (deltaTime, currAccTime) => {
-      if (deltaTime + currAccTime >= 60 * 1000) {
-        return { cond: true, next_time: 0 };
-      } else {
-        return { cond: false, next_time: deltaTime + currAccTime };
-      }
-    },
-  );
-  const s_oneMinutesPassed = s_timeManage.filter(({ cond }) => cond);
-  cloop_currAccTime.loop(
-    s_timeManage.map(({ next_time }) => next_time).hold(0),
-  );
+  const s_oneMinutesPassed = Time.ms_passed(Time.minute_to_ms(1), s_tick);
 
   const c_currTemp = s_temperature.hold(0);
   const c_prevTemp = s_oneMinutesPassed.snapshot1(c_currTemp).hold(0);

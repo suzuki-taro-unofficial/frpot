@@ -1,6 +1,7 @@
 import { error_temperature_not_increased } from "./error";
 import { Cell, StreamSink, Transaction, Unit } from "sodiumjs";
-import { Time } from "@/util";
+import { Time } from "@/util/time";
+import { test, expect } from "vitest";
 
 test("temperature increased correctly", () => {
   const s_tick = new StreamSink<number>();
