@@ -170,12 +170,12 @@ const failureStatus = (inputs: StatusInput): Stream<boolean> => {
   const s_newFailureStatus = s_mergedFailureStatus.snapshot(
     cloop_failureStatus,
     (newStatus, oldStatus) => {
-      console.log("failureStatus", newStatus);
       return {
         temperatureTooHigh:
           newStatus.temperatureTooHigh ?? oldStatus.temperatureTooHigh,
         temperatureNotIncreased:
-          newStatus.temperatureNotIncreased ?? oldStatus.temperatureNotIncreased,
+          newStatus.temperatureNotIncreased ??
+          oldStatus.temperatureNotIncreased,
         waterOverflow: newStatus.waterOverflow ?? oldStatus.waterOverflow,
         waterLevelTooLow:
           newStatus.waterLevelTooLow ?? oldStatus.waterLevelTooLow,
@@ -185,14 +185,13 @@ const failureStatus = (inputs: StatusInput): Stream<boolean> => {
   );
 
   cloop_failureStatus.loop(
-    s_newFailureStatus
-      .hold({
-        temperatureTooHigh: true,
-        temperatureNotIncreased: false,
-        waterOverflow: true,
-        waterLevelTooLow: true,
-        lidOpen: true,
-      }),
+    s_newFailureStatus.hold({
+      temperatureTooHigh: true,
+      temperatureNotIncreased: false,
+      waterOverflow: true,
+      waterLevelTooLow: true,
+      lidOpen: true,
+    }),
   );
 
   return s_newFailureStatus.map((status) => {
@@ -222,49 +221,93 @@ const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
   );
 };
 
+// 他のストリームは常時更新されるが、statusは更新されるときだけ更新される
 export const status = (inputs: StatusInput): Stream<Status> => {
-  return Transaction.run(() => {
-    const s_failureStatus = failureStatus(inputs);
-    const s_turnOnKeepWarm = turnOnKeepWarm(inputs);
-    const c_prevLid = inputs.s_lid.hold("Open");
-    const cloop_status = new CellLoop<Status>();
+  // デフォルト値にc_failureStatusを使いs_failureStatusが発火したときはs_failureStatusを使う
+  const s_failureStatus = failureStatus(inputs);
+  const c_failureStatus = s_failureStatus.hold(false);
+  const s_turnOnKeepWarm = turnOnKeepWarm(inputs);
+  const c_prevLid = inputs.s_lid.hold("Open");
+  const s_lidClose = inputs.s_lid
+    .snapshot(c_prevLid, (newLid, prevLid) => {
+      return newLid === "Close" && prevLid === "Open";
+    })
+    .filter((v) => v)
+    .mapTo(Unit.UNIT);
+  const cloop_prevStatus = new CellLoop<Status>();
 
-    const s_failureStatusToStop = s_failureStatus
-      .filter((failure) => failure)
-      .mapTo<Status>("Stop");
-    const s_turnOnKeepWarmToKeepWarm =
-      s_turnOnKeepWarm.mapTo<Status>("KeepWarm");
-    const s_boilButtonClickedToBoil = inputs.s_boilButtonClicked
-      .snapshot(c_prevLid, (_, prevLid) => {
-        return prevLid === "Close";
-      })
-      .mapTo<Status>("Boil");
-    const s_lidClosedToBoil = inputs.s_lid
-      .snapshot(c_prevLid, (newLid, prevLid) => {
-        return newLid === "Close" && prevLid === "Open";
-      })
-      .filter((a) => a)
-      .mapTo<Status>("Boil");
-
-    const s_newStatusMerged = s_failureStatusToStop
-      .orElse(s_turnOnKeepWarmToKeepWarm)
-      .orElse(s_boilButtonClickedToBoil)
-      .orElse(s_lidClosedToBoil);
-    const s_newStatusFiltered = s_newStatusMerged
-      .snapshot3(
-        cloop_status,
-        s_failureStatus.hold(true),
-        (newStatus, prevStatus, failure) => {
-          return {
-            newStatus: failure ? "Stop" : newStatus,
-            prevStatus: prevStatus,
-          };
-        },
-      )
-      .filter(({ prevStatus, newStatus }) => prevStatus !== newStatus)
-      .map(({ newStatus }) => newStatus);
-
-    cloop_status.loop(s_newStatusFiltered.hold("Stop"));
-    return s_newStatusFiltered;
+  // failureStatusからfalseが発火するのと、lidOpenが発火するのは同時
+  // なので、各沸騰・保温のストリームが発火するときにc_failureStatusを見るだけではいけない
+  type StatusUpdate = {
+    newStatus: Status;
+    failure: boolean;
+  };
+  const s_boilButtonClickedUpdate = inputs.s_boilButtonClicked.snapshot<
+    boolean,
+    StatusUpdate
+  >(c_failureStatus, (_, failure) => {
+    console.log("boilButtonClicked", failure);
+    return {
+      newStatus: "Boil",
+      failure,
+    };
   });
+  const s_lidCloseUpdate = s_lidClose.snapshot<boolean, StatusUpdate>(
+    c_failureStatus,
+    (_, failure) => {
+      console.log("lidClose", failure);
+      return {
+        newStatus: "Boil",
+        failure,
+      };
+    },
+  );
+  const s_turnOnKeepWarmUpdate = s_turnOnKeepWarm.snapshot<
+    boolean,
+    StatusUpdate
+  >(c_failureStatus, (_, failure) => {
+    console.log("turnOnKeepWarm", failure);
+    return {
+      newStatus: "KeepWarm",
+      failure,
+    };
+  });
+  const s_failureStatusUpdate = s_failureStatus.snapshot<Status, StatusUpdate>(
+    cloop_prevStatus,
+    (failure, prevStatus) => {
+      console.log("failureStatus", failure);
+      return {
+        newStatus: prevStatus,
+        failure,
+      };
+    },
+  );
+
+  const s_newStatus = s_boilButtonClickedUpdate
+    .orElse(s_lidCloseUpdate)
+    .orElse(s_turnOnKeepWarmUpdate)
+    .merge(s_failureStatusUpdate, (other, failure) => {
+      return {
+        newStatus: other.newStatus,
+        failure: failure.failure,
+      };
+    })
+    .map(({ newStatus, failure }) => {
+      return failure ? "Stop" : newStatus;
+    });
+  cloop_prevStatus.loop(s_newStatus.hold("Stop"));
+  return s_newStatus
+    .snapshot(cloop_prevStatus, (newStatus, prevStatus) => {
+      return {
+        newStatus,
+        prevStatus,
+      };
+    })
+    .filter(({ newStatus, prevStatus }) => {
+      return newStatus !== prevStatus;
+    })
+    .map(({ newStatus }) => {
+      console.log("newStatus", newStatus);
+      return newStatus;
+    });
 };
