@@ -206,10 +206,10 @@ const failureStatus = (inputs: StatusInput): Stream<boolean> => {
 };
 
 // 保温状態に入るタイミングを監視する
-// 保温状態に切り替わるとき、一回だけ発火する
+// 100度に到達した後、3分ごとに発火する
 const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
   const s_under100Degree = inputs.s_temperatureSensor
-    .filter((t) => t <= 100)
+    .filter((t) => t < 100 - 2) // +-2度の誤差を許容
     .mapTo(Unit.UNIT);
 
   return Time.ms_passed(
