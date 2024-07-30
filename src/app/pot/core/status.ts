@@ -242,33 +242,19 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     newStatus: Status;
     failure: boolean;
   };
-  const s_boilButtonClickedUpdate = inputs.s_boilButtonClicked.snapshot<
-    boolean,
-    StatusUpdate
-  >(c_failureStatus, (_, failure) => {
-    return {
-      newStatus: "Boil",
-      failure,
-    };
-  });
-  const s_lidCloseUpdate = s_lidClose.snapshot<boolean, StatusUpdate>(
-    c_failureStatus,
-    (_, failure) => {
+  const s_boilButtonClickedStatus =
+    inputs.s_boilButtonClicked.mapTo<Status>("Boil");
+  const s_lidCloseStatus = s_lidClose.mapTo<Status>("Boil");
+  const s_turnOnKeepWarmStatus = s_turnOnKeepWarm.mapTo<Status>("KeepWarm");
+  const s_mergedUpdate = s_boilButtonClickedStatus
+    .orElse(s_lidCloseStatus)
+    .orElse(s_turnOnKeepWarmStatus)
+    .snapshot<boolean, StatusUpdate>(c_failureStatus, (newStatus, failure) => {
       return {
-        newStatus: "Boil",
+        newStatus,
         failure,
       };
-    },
-  );
-  const s_turnOnKeepWarmUpdate = s_turnOnKeepWarm.snapshot<
-    boolean,
-    StatusUpdate
-  >(c_failureStatus, (_, failure) => {
-    return {
-      newStatus: "KeepWarm",
-      failure,
-    };
-  });
+    });
   const s_failureStatusUpdate = s_failureStatus.snapshot<Status, StatusUpdate>(
     cloop_prevStatus,
     (failure, prevStatus) => {
@@ -279,9 +265,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     },
   );
 
-  const s_newStatus = s_boilButtonClickedUpdate
-    .orElse(s_lidCloseUpdate)
-    .orElse(s_turnOnKeepWarmUpdate)
+  const s_newStatus = s_mergedUpdate
     .merge(s_failureStatusUpdate, (other, failure) => {
       return {
         newStatus: other.newStatus,
