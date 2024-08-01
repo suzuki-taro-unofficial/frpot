@@ -12,18 +12,12 @@ type TimerOutput = {
 
 export const timer = (inputs: TimerInput): TimerOutput => {
   return Transaction.run(() => {
-    const c_previousTime = inputs.s_tick.hold(0);
-    // 経過時間はマイナスの値を持つ
-    const s_erapsed = inputs.s_tick.snapshot<number, number>(
-      c_previousTime,
-      (newTime, prevTime) => (prevTime === 0 ? 0 : prevTime - newTime),
-    );
-    const s_add = inputs.s_timerButtonClicked.mapTo(60 * 1000);
+    const s_add = inputs.s_timerButtonClicked.mapTo(-60 * 1000);
     const c_remainigTime = new CellLoop<number>();
-    const s_newTime = s_erapsed
+    const s_newTime = inputs.s_tick
       .merge(s_add, (a, b) => a + b)
       .snapshot(c_remainigTime, (delta, remaining) => {
-        return Math.max(0, remaining + delta) % (60 * 60 * 1000); // 最大1時間
+        return Math.max(0, remaining - delta) % (60 * 60 * 1000); // 最大1時間
       });
     c_remainigTime.loop(s_newTime.hold(0));
     const s_beep = s_newTime
