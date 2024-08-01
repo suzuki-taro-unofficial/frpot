@@ -1,4 +1,4 @@
-import { Stream, Unit, CellLoop, Transaction } from "sodiumjs";
+import { Stream, Unit, CellLoop } from "sodiumjs";
 import { LidState, WaterLevel } from "../../types";
 import { Status } from "../types";
 import { Time } from "@/util/time";
@@ -229,7 +229,7 @@ const lidClose = (lid: Stream<LidState>): Stream<Unit> => {
     })
     .filter((v) => v)
     .mapTo(Unit.UNIT);
-}
+};
 
 // 他のストリームは常時更新されるが、statusは更新されるときだけ更新される
 export const status = (inputs: StatusInput): Stream<Status> => {
