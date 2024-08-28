@@ -1,3 +1,5 @@
+import { clamp } from "@/util/util";
+
 export type WaterLevel = 0 | 1 | 2 | 3 | 4;
 export type LidState = "Open" | "Close";
 
@@ -76,6 +78,7 @@ export class Water {
     return new Water(w1.ml + w2.ml, newJoule);
   }
   emitWater(ml: number): Water {
+    if (ml === 0.0) return Water.fromMl(this.ml, this.joule);
     const newJoule = Joule.fromJoule(
       (this.joule.asNumber() / this.ml) * (this.ml - ml),
     );
@@ -90,7 +93,9 @@ export class Water {
   subJoule(joule: Joule): Water {
     return Water.fromMl(
       this.ml,
-      Joule.fromJoule(this.joule.asNumber() - joule.asNumber()),
+      Joule.fromJoule(
+        clamp(this.joule.asNumber() - joule.asNumber(), 0, Number.MAX_VALUE),
+      ),
     );
   }
   toMl(): number {
