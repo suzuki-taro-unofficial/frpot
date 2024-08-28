@@ -34,7 +34,7 @@
 
 ### ネットワーク図
 
-![error_temperature_too_hight.png](../images/error_temperature_too_hight.png)
+![error_temperature_too_hight.png](../images/error_temperature_too_high.png)
 
 ### 入力
 

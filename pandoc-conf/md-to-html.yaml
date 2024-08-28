@@ -2,7 +2,25 @@ from: markdown
 to: html5
 
 input-files:
+  # 全体像
   - docs/all.md
+  - docs/app.md
+  - docs/core.md
+
+  # coreの各モジュールの説明
+  - docs/error.md
+  - docs/status.md
+  - docs/target_temperature.md
+  - docs/heaterPower.md
+  - docs/keepWarmMode.md
+  - docs/beep.md
+
+  # その他
+  - docs/presenter.md
+  - docs/simulator.md
+  - docs/timer.md
+  - docs/components.md
+
 output-file: output.html
 metadata-file: pandoc-conf/meta.yaml
 
