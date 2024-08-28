@@ -42,19 +42,24 @@ export const simulator = ({
   const s_lidStateSensor = s_tick.snapshot1(c_lid);
 
   const cloop_water = new CellLoop<Water>();
+
+  const c_inWater = s_tick
+    // 蓋があいてるときのみ入れられる
+    .gate(c_lid.map((lid) => lid === "Open"))
+    .gate(c_waterIn)
+    .map((duration) => Water.fromMl(pourPerSec * duration.toSec()))
+    // 蓋が開いていないもしくは水を入れていないときには0mLの水を入れる
+    .orElse(s_tick.mapTo(Water.fromMl(0)))
+    .hold(Water.fromMl(0));
+
   cloop_water.loop(
     s_tick
-      .snapshot6(
+      .snapshot5(
         cloop_water,
-        c_waterIn,
+        c_inWater,
         c_hotWaterSupply,
-        c_lid,
         c_heaterPower,
-        (duration, water, should_in, should_out, lid, heaterPower) => {
-          const in_water =
-            lid == "Open" && should_in
-              ? Water.fromMl(pourPerSec * duration.toSec())
-              : Water.fromMl(0);
+        (duration, water, in_water, should_out, heaterPower) => {
           const out_ml = should_out ? emitPerSec * duration.toSec() : 0;
           return Water.merge(in_water, water.emitWater(out_ml))
             .addJoule(heaterPower.toJoule(duration))
