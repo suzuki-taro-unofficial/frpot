@@ -1,0 +1,28 @@
+from: markdown
+to: html5
+
+input-files:
+  - docs/all.md
+output-file: output.html
+metadata-file: meta.yaml
+
+# pdf-engine: lualatex
+variables:
+  classoption:
+    - pandoc
+  documentclass:
+    - bxjsarticle
+
+html-math-method:
+  method: mathml
+
+toc: true
+toc-depth: 3
+# ePUBの改ページ(見出し) デフォルトではh1のみ
+# epub-chapter-level: 2
+css:
+  - github.css
+file-scope: true
+highlight-style: tango
+resource-path:
+  - images
