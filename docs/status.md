@@ -85,5 +85,10 @@
 
 ## タイミング図
 
-![timing1](../images/frpod-status-timing.png)
+### 障害状態のタイミング図
 
+![failureStatus](../images/failure_status_timing.png)
+
+### ステータスのタイミング図
+
+![status](../images/status_timing.png)
