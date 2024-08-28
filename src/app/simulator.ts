@@ -52,15 +52,20 @@ export const simulator = ({
     .orElse(s_tick.mapTo(Water.fromMl(0)))
     .hold(Water.fromMl(0));
 
+  const c_outMl = s_tick
+    .gate(c_hotWaterSupply)
+    .map((duration) => emitPerSec * duration.toSec())
+    .orElse(s_tick.mapTo(0))
+    .hold(0);
+
   cloop_water.loop(
     s_tick
       .snapshot5(
         cloop_water,
         c_inWater,
-        c_hotWaterSupply,
+        c_outMl,
         c_heaterPower,
-        (duration, water, in_water, should_out, heaterPower) => {
-          const out_ml = should_out ? emitPerSec * duration.toSec() : 0;
+        (duration, water, in_water, out_ml, heaterPower) => {
           return Water.merge(in_water, water.emitWater(out_ml))
             .addJoule(heaterPower.toJoule(duration))
             .subJoule(Joule.fromJoule(decJoulePerSec * duration.toSec()));
