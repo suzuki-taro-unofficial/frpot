@@ -1,6 +1,7 @@
 import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
 import { LidState, WaterLevel } from "./types";
 import { clamp } from "@/util/util";
+import { Time } from "@/util/time";
 
 // TODO:
 // 水量や熱量などの単位をどうするか
@@ -32,6 +33,7 @@ export const simulator = ({
   const actualCapacity = capacity + 200;
   const emitPerSec = 100;
   const pourPerSec = 100;
+  const decTempPerSec = 1 / 180;
 
   const c_lid = s_lid.accum<LidState>("Open", (_, state) =>
     state === "Open" ? "Close" : "Open",
@@ -48,8 +50,12 @@ export const simulator = ({
         c_lid,
         (deltaTime, amount, should_in, should_out, lid) => {
           const in_amount =
-            lid == "Open" && should_in ? pourPerSec * (deltaTime / 1000) : 0;
-          const out_amount = should_out ? -emitPerSec * (deltaTime / 1000) : 0;
+            lid == "Open" && should_in
+              ? pourPerSec * Time.ms_to_second(deltaTime)
+              : 0;
+          const out_amount = should_out
+            ? -emitPerSec * Time.ms_to_second(deltaTime)
+            : 0;
           return amount + in_amount + out_amount;
         },
       )
@@ -66,10 +72,10 @@ export const simulator = ({
         cloop_amount,
         c_heaterPower,
         (deltaTime, temp, amount, power) => {
-          temp -= 0.1 * (deltaTime / 1000);
+          temp -= decTempPerSec * Time.ms_to_second(deltaTime);
           temp = Math.max(temp, 0);
 
-          const joule = power * (deltaTime / 1000);
+          const joule = power * Time.second_to_ms(deltaTime);
           if (amount <= 10) {
             // 水の量が極端に少ないなら異常加熱
             return { cond: true, temp: temp + joule }; // TODO: 良い感じの温度変化
