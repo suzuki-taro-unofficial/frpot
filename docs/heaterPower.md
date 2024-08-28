@@ -1,6 +1,6 @@
 # heaterPower
 
-![../heaterPower.png](heaterPower.png)
+![../images/heaterPower.png](heaterPower.png)
 
 ## 概要
 
