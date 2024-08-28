@@ -2,6 +2,10 @@
 
 現在の状態から目標温度を決定する。
 
+## ネットワーク図
+
+![target_temperature.png]("../images/target_temperature.png")
+
 ## 入力
 
 - `c_status`
