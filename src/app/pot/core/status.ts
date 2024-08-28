@@ -231,7 +231,7 @@ const lidClose = (lid: Stream<LidState>): Stream<Unit> => {
     .mapTo(Unit.UNIT);
 };
 
-// 他のストリームは常時更新されるが、statusは更新されるときだけ更新される
+// statusのストリームは更新があるときだけ発火する。
 export const status = (inputs: StatusInput): Stream<Status> => {
   // デフォルト値にc_failureStatusを使いs_failureStatusが発火したときはs_failureStatusを使う
   const s_failureStatus = failureStatus(inputs);
