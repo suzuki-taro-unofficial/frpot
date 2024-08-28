@@ -11,6 +11,12 @@ export class Time {
     return s * 1000;
   }
 
+  /**
+   * 指定したミリ秒が経過する毎に発火するストリームを作る
+   * @param ms ミリ秒の指定
+   * @param s_tick 経過時間の入力
+   * @param [s_forceReset=new Stream()]  経過時間をリセットする
+   */
   static ms_passed(
     ms: number,
     s_tick: Stream<number>,
