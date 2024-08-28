@@ -6,6 +6,10 @@
 
 加熱しているのに温度が上がらず5分が経過した際に発生するエラー
 
+### ネットワーク図
+
+![error_temperature_not_increased.png](../images/error_temperature_not_increased.png)
+
 ### 入力
 
 - `s_tick`
@@ -27,6 +31,10 @@
 ## error_temperature_too_hight
 
 温度が異常に高いときに発生するエラー
+
+### ネットワーク図
+
+![error_temperature_too_hight.png](../images/error_temperature_too_hight.png)
 
 ### 入力
 
