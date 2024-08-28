@@ -1,6 +1,5 @@
 import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
-import { Duration, LidState, WaterLevel } from "./types";
-import { clamp } from "@/util/util";
+import { Duration, Joule, LidState, Water, WaterLevel, Watt } from "./types";
 
 // TODO:
 // 水量や熱量などの単位をどうするか
@@ -15,7 +14,7 @@ type Input = {
 };
 
 type Output = {
-  s_temperatureSensor: Stream<number>;
+  s_temperatureSensor: Stream<number>; // TODO: number -> Temperature
   s_waterLevelSensor: Stream<WaterLevel>;
   s_waterOverflowSensor: Stream<boolean>;
   s_lidStateSensor: Stream<LidState>;
@@ -25,70 +24,52 @@ export const simulator = ({
   c_waterIn,
   s_lid,
   s_tick,
-  c_heaterPower,
+  c_heaterPower: _c_heaterPower,
   c_hotWaterSupply,
 }: Input): Output => {
   const capacity = 2000;
   const actualCapacity = capacity + 200;
   const emitPerSec = 100;
   const pourPerSec = 100;
-  const decTempPerSec = 1 / 180;
+  const decJoulePerSec = 0.005;
+  const c_heaterPower = _c_heaterPower.map((w) =>
+    Watt.fromWatt(w - decJoulePerSec),
+  );
 
   const c_lid = s_lid.accum<LidState>("Open", (_, state) =>
     state === "Open" ? "Close" : "Open",
   );
   const s_lidStateSensor = s_tick.snapshot1(c_lid);
 
-  const cloop_amount = new CellLoop<number>();
-  cloop_amount.loop(
+  const cloop_water = new CellLoop<Water>();
+  cloop_water.loop(
     s_tick
-      .snapshot5(
-        cloop_amount,
+      .snapshot6(
+        cloop_water,
         c_waterIn,
         c_hotWaterSupply,
         c_lid,
-        (deltaTime, amount, should_in, should_out, lid) => {
-          const in_amount =
-            lid == "Open" && should_in ? pourPerSec * deltaTime.toSec() : 0;
-          const out_amount = should_out ? -emitPerSec * deltaTime.toSec() : 0;
-          return amount + in_amount + out_amount;
-        },
-      )
-      .map((amount) => clamp(amount, 0, actualCapacity))
-      .hold(0),
-  );
-
-  // 現在の水の温度で単位は°C
-  const cloop_temp = new CellLoop<number>();
-  cloop_temp.loop(
-    s_tick
-      .snapshot4(
-        cloop_temp,
-        cloop_amount,
         c_heaterPower,
-        (deltaTime, temp, amount, power) => {
-          temp -= decTempPerSec * deltaTime.toSec();
-          temp = Math.max(temp, 0);
-
-          const joule = power * deltaTime.toSec();
-          if (amount <= 10) {
-            // 水の量が極端に少ないなら異常加熱
-            return { cond: true, temp: temp + joule }; // TODO: 良い感じの温度変化
-          } else {
-            return { cond: false, temp: temp + joule / 4.2 / amount };
-          }
+        (duration, water, should_in, should_out, lid, heaterPower) => {
+          const in_water =
+            lid == "Open" && should_in
+              ? Water.fromMl(pourPerSec * duration.toSec())
+              : Water.fromMl(0);
+          const out_ml = should_out ? emitPerSec * duration.toSec() : 0;
+          return Water.merge(in_water, water.emitWater(out_ml))
+            .addJoule(heaterPower.toJoule(duration))
+            .subJoule(Joule.fromJoule(decJoulePerSec * duration.toSec()));
         },
       )
-      .map(({ cond, temp }) => (cond ? temp : temp > 100 ? 100 : temp))
-      .hold(80),
+      .hold(Water.fromL(0)),
   );
 
-  const s_temperatureSensor = s_tick.snapshot(cloop_temp, (_, temp) => {
-    return temp;
+  const s_temperatureSensor = s_tick.snapshot(cloop_water, (_, water) => {
+    return water.toTemp();
   });
 
   const s_waterLevelSensor: Stream<WaterLevel> = s_tick.snapshot(
-    cloop_amount,
+    cloop_water.map((water) => water.toMl()),
     (_, amount) => {
       if (4 * amount < capacity) {
         return 0;
@@ -104,12 +85,15 @@ export const simulator = ({
     },
   );
 
-  const s_waterOverflowSensor = s_tick.snapshot(cloop_amount, (_, amount) => {
-    return amount >= actualCapacity - 100;
-  });
+  const s_waterOverflowSensor = s_tick.snapshot(
+    cloop_water.map((water) => water.toMl()),
+    (_, amount) => {
+      return amount >= actualCapacity - 100;
+    },
+  );
 
   return {
-    s_temperatureSensor,
+    s_temperatureSensor: s_temperatureSensor.map((temp) => temp.toCelsius()), // TODO: remove map
     s_waterLevelSensor,
     s_waterOverflowSensor,
     s_lidStateSensor,

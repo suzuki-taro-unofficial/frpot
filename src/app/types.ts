@@ -75,6 +75,24 @@ export class Water {
     const newJoule = Joule.fromJoule(w1.joule.asNumber() + w2.joule.asNumber());
     return new Water(w1.ml + w2.ml, newJoule);
   }
+  emitWater(ml: number): Water {
+    const newJoule = Joule.fromJoule(
+      (this.joule.asNumber() / this.ml) * (this.ml - ml),
+    );
+    return Water.fromMl(this.ml - ml, newJoule);
+  }
+  addJoule(joule: Joule): Water {
+    return Water.fromMl(
+      this.ml,
+      Joule.fromJoule(this.joule.asNumber() + joule.asNumber()),
+    );
+  }
+  subJoule(joule: Joule): Water {
+    return Water.fromMl(
+      this.ml,
+      Joule.fromJoule(this.joule.asNumber() - joule.asNumber()),
+    );
+  }
   toMl(): number {
     return this.ml;
   }
@@ -83,9 +101,9 @@ export class Water {
   }
   toTemp(): Temperature {
     const needJoulesForOneCelcius = this.ml * 4.2;
-    return Temperature.fromCelsius(
-      this.joule.asNumber() / needJoulesForOneCelcius,
-    );
+    const celsius = this.joule.asNumber() / needJoulesForOneCelcius;
+    if (Number.isNaN(celsius)) return Temperature.fromCelsius(0);
+    else return Temperature.fromCelsius(celsius);
   }
 
   _type: "Water";
