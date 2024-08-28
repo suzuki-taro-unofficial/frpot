@@ -10,6 +10,9 @@ export class Time {
   static second_to_ms(s: number): number {
     return s * 1000;
   }
+  static ms_to_second(ms: number): number {
+    return ms / 1000;
+  }
 
   /**
    * 指定したミリ秒が経過する毎に発火するストリームを作る

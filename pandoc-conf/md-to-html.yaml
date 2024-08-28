@@ -1,0 +1,46 @@
+from: markdown
+to: html5
+
+input-files:
+  # 全体像
+  - docs/all.md
+  - docs/app.md
+  - docs/core.md
+
+  # coreの各モジュールの説明
+  - docs/error.md
+  - docs/status.md
+  - docs/target_temperature.md
+  - docs/heaterPower.md
+  - docs/keepWarmMode.md
+  - docs/beep.md
+
+  # その他
+  - docs/presenter.md
+  - docs/simulator.md
+  - docs/timer.md
+  - docs/components.md
+
+output-file: output.html
+metadata-file: pandoc-conf/meta.yaml
+
+# pdf-engine: lualatex
+variables:
+  classoption:
+    - pandoc
+  documentclass:
+    - bxjsarticle
+
+html-math-method:
+  method: mathml
+
+toc: true
+toc-depth: 3
+# ePUBの改ページ(見出し) デフォルトではh1のみ
+# epub-chapter-level: 2
+css:
+  - github.css
+file-scope: true
+highlight-style: tango
+resource-path:
+  - images
