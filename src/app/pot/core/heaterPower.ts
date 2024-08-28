@@ -31,30 +31,19 @@ export const heaterPower = ({
           case 0:
             return 0;
           case 1:
-            return Math.min(
-              (targetTemperature - temperature + 1) ** 2 * 500,
-              5000,
-            );
+            return (targetTemperature - temperature + 1) ** 2 * 500;
           case 2:
-            return Math.min(
-              (targetTemperature - temperature + 1) ** 2 * 1000,
-              5000,
-            );
+            return (targetTemperature - temperature + 1) ** 2 * 1000;
           case 3:
-            return Math.min(
-              (targetTemperature - temperature + 1) ** 2 * 1500,
-              5000,
-            );
+            return (targetTemperature - temperature + 1) ** 2 * 1500;
           case 4:
-            return Math.min(
-              (targetTemperature - temperature + 1) ** 2 * 2000,
-              5000,
-            );
+            return (targetTemperature - temperature + 1) ** 2 * 2000;
           default:
             return 0;
         }
       },
-    );
+    )
+    .map((power) => Math.min(power, 5000));
 
   const s_whenStop = s_waterLevelSensor
     .gate(c_status.map((s) => s === "Stop"))
