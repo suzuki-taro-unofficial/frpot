@@ -1,7 +1,6 @@
 import { Cell, CellLoop, Stream, Unit } from "sodiumjs";
-import { LidState, WaterLevel } from "./types";
+import { Duration, LidState, WaterLevel } from "./types";
 import { clamp } from "@/util/util";
-import { Time } from "@/util/time";
 
 // TODO:
 // 水量や熱量などの単位をどうするか
@@ -9,7 +8,7 @@ import { Time } from "@/util/time";
 
 type Input = {
   c_waterIn: Cell<boolean>; // 水を入れるかどうか
-  s_tick: Stream<number>;
+  s_tick: Stream<Duration>;
   c_heaterPower: Cell<number>; // ヒーターの熱量で単位はW
   c_hotWaterSupply: Cell<boolean>;
   s_lid: Stream<Unit>;
@@ -50,12 +49,8 @@ export const simulator = ({
         c_lid,
         (deltaTime, amount, should_in, should_out, lid) => {
           const in_amount =
-            lid == "Open" && should_in
-              ? pourPerSec * Time.ms_to_second(deltaTime)
-              : 0;
-          const out_amount = should_out
-            ? -emitPerSec * Time.ms_to_second(deltaTime)
-            : 0;
+            lid == "Open" && should_in ? pourPerSec * deltaTime.toSec() : 0;
+          const out_amount = should_out ? -emitPerSec * deltaTime.toSec() : 0;
           return amount + in_amount + out_amount;
         },
       )
@@ -72,10 +67,10 @@ export const simulator = ({
         cloop_amount,
         c_heaterPower,
         (deltaTime, temp, amount, power) => {
-          temp -= decTempPerSec * Time.ms_to_second(deltaTime);
+          temp -= decTempPerSec * deltaTime.toSec();
           temp = Math.max(temp, 0);
 
-          const joule = power * Time.second_to_ms(deltaTime);
+          const joule = power * deltaTime.toSec();
           if (amount <= 10) {
             // 水の量が極端に少ないなら異常加熱
             return { cond: true, temp: temp + joule }; // TODO: 良い感じの温度変化

@@ -1,11 +1,11 @@
 import { core } from "@/app/pot/core";
 import { Cell, Stream, Unit } from "sodiumjs";
 import { presenter } from "./presenter";
-import { BeepType, LidState, WaterLevel } from "../types";
+import { BeepType, Duration, LidState, WaterLevel } from "../types";
 
 type Input = {
   // from root
-  s_tick: Stream<number>;
+  s_tick: Stream<Duration>;
   // from simulator
   s_temperatureSensor: Stream<number>;
   s_waterLevelSensor: Stream<0 | 1 | 2 | 3 | 4>;

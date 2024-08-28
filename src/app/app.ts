@@ -4,8 +4,9 @@ import { pot } from "./pot/pot";
 import { CellLoop, Stream, Transaction } from "sodiumjs";
 import { Button, Display, HStack, Lamp, Meter, VStack } from "@/components";
 import { beep } from "@/util/beep";
+import { Duration } from "./types";
 
-export const app = (s_tick: Stream<number>): ViewItem => {
+export const app = (s_tick: Stream<Duration>): ViewItem => {
   // 入力のユーザインタフェース生成
   const waterInButton = new Button("水追加");
 

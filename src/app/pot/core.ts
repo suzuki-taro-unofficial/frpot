@@ -6,7 +6,7 @@ import {
   Transaction,
   Unit,
 } from "sodiumjs";
-import { BeepType, LidState, WaterLevel } from "../types";
+import { BeepType, Duration, LidState, WaterLevel } from "../types";
 import { KeepWarmMode, Status } from "./types";
 import { heaterPower } from "./core/heaterPower";
 import { target_temperature } from "./core/target_temperature";
@@ -20,7 +20,7 @@ import { beep } from "./core/beep";
 
 type Input = {
   // from root
-  s_tick: Stream<number>;
+  s_tick: Stream<Duration>;
   // from simulator
   s_temperatureSensor: Stream<number>;
   s_waterLevelSensor: Stream<WaterLevel>;
@@ -79,14 +79,14 @@ export const core = ({
   });
 
   const s_errorTemperatureNotIncreased = error_temperature_not_increased({
-    s_tick,
+    s_tick: s_tick.map((d) => d.toMs()),
     s_temperature: s_temperatureSensor,
     c_targetTemp: c_targetTemperature,
   });
 
   const s_status = status({
     s_boilButtonClicked,
-    s_tick,
+    s_tick: s_tick.map((d) => d.toMs()),
     s_lid: s_lidStateSensor,
     s_waterLevelSensor,
     s_temperatureSensor,
@@ -109,7 +109,7 @@ export const core = ({
   });
 
   const { c_remainigTime, s_beep: s_timerZero } = timer({
-    s_tick,
+    s_tick: s_tick.map((d) => d.toMs()),
     s_timerButtonClicked,
   });
 
@@ -133,7 +133,7 @@ export const core = ({
     // for simulator
     c_heaterPower,
     c_hotWaterSuply: hotWaterSupply({
-      s_tick,
+      s_tick: s_tick.map((d) => d.toMs()),
       c_lockState: c_lock,
       c_hotWaterSupplyButtonPushing,
     }),
