@@ -2,6 +2,10 @@
 
 coreからの出力を出力UI用のデータ形式に加工する。
 
+## ネットワーク図
+
+![](../images/presenter.png)
+
 ## 入力
 
 - c_status
