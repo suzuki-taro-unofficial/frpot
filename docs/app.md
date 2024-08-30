@@ -16,7 +16,6 @@ FRPネットワーク全体とUI全体の構築を行う。
 
 内部的にUIからの入力として
 
-- `s_hoge`
 - `waterInButton.c_pushing`: 「水追加」ボタンの押下状態
 - `boilButton.s_clicked`: 「沸騰」ボタンが押されると発火
 - `timerButton.s_clicked`:「タイマー」ボタンが押されると発火
