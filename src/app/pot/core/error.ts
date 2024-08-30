@@ -26,7 +26,7 @@ export const error_temperature_not_increased = ({
     },
   );
 
-  return s_oneMinutesPassed.gate(c_isTemperatureNotIncreased).mapTo(Unit.UNIT);
+  return s_oneMinutesPassed.gate(c_isTemperatureNotIncreased);
 };
 
 type ErrorTemperatureTooHighInput = {
