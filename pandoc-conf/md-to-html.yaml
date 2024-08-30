@@ -7,6 +7,8 @@ input-files:
   - docs/app.md
   - docs/core.md
 
+  # ここからpotの説明
+
   # coreの各モジュールの説明
   - docs/error.md
   - docs/status.md
@@ -14,11 +16,13 @@ input-files:
   - docs/heaterPower.md
   - docs/keepWarmMode.md
   - docs/beep.md
+  - docs/timer.md
+
+  # potにあるpresenterの説明
+  - docs/presenter.md
 
   # その他
-  - docs/presenter.md
   - docs/simulator.md
-  - docs/timer.md
   - docs/components.md
 
 output-file: output.html
