@@ -18,7 +18,7 @@ export const heaterPower = ({
 }: heaterPowerInput): Cell<number> => {
   const s_whenBoil = s_waterLevelSensor
     .gate(c_status.map((s) => s === "Boil"))
-    .mapTo(5000);
+    .mapTo(500);
 
   const s_whenKeepWarm = s_waterLevelSensor
     .gate(c_status.map((s) => s === "KeepWarm"))
@@ -43,7 +43,7 @@ export const heaterPower = ({
         }
       },
     )
-    .map((power) => Math.min(power, 5000));
+    .map((power) => Math.min(power, 500));
 
   const s_whenStop = s_waterLevelSensor
     .gate(c_status.map((s) => s === "Stop"))
