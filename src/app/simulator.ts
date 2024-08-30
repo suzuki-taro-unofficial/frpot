@@ -75,7 +75,7 @@ export const simulator = ({
           temp -= decTempPerSec * Time.ms_to_second(deltaTime);
           temp = Math.max(temp, 0);
 
-          const joule = power * Time.second_to_ms(deltaTime);
+          const joule = power * Time.ms_to_second(deltaTime);
           if (amount <= 10) {
             // 水の量が極端に少ないなら異常加熱
             return { cond: true, temp: temp + joule }; // TODO: 良い感じの温度変化
