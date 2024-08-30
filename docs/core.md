@@ -4,7 +4,7 @@
 
 ## ネットワーク図
 
-![core.png]
+![core.png](../images/core.png)
 
 ## 入力
 
