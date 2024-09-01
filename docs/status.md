@@ -49,7 +49,7 @@
 
 ### 内部的な状態
 
-![内部の状態の状態遷移図](../images/status_state_transition.png)
+![内部の状態の状態遷移図](../images/status/status_state_transition.png)
 
 ポットの動作が停止する要因として、フタが開けられたような正常な場合とエラーが発生したなどの異常な場合の2つが考えられる。これらを区別するために、内部では4種類の状態を保持している。
 
@@ -58,13 +58,11 @@
 - 沸騰状態
 - 保温状態
 
-これらの状態は外部へ出される際に
+これらの状態は外部へ出される際に次のように変換される。
 
 - 停止状態 <- 正常停止状態 | 異常停止状態
 - 沸騰状態 <- 沸騰状態
 - 保温状態 <- 保温状態
-
-と変換される。
 
 ### 異常停止状態について
 
@@ -134,23 +132,22 @@ TODO ネットワーク図と説明
 
 ![errorTemperatureTooHighUpdateのネットワーク図](../images/status/errorTemperatureTooHighUpdate.png)
 
-
+オーバーヒートした際と、オーバーヒートからの復旧の際に発火するストリームを返す。
 
 ### errorTemperatureNotIncreasedUpdate
 
 ![errorTemperatureNotIncreasedUpdateのネットワーク図](../images/status/errorTemperatureNotIncreasedUpdate.png)
 
-TODO 説明
+温度上がらずエラーが発生した際と、温度上がらずエラーからの復旧の際に発火するストリームを返す。
 
 ### errorWaterOverflowUpdate
 
 ![errorWaterOverflowUpdateのネットワーク図](../images/status/waterOverflowUpdate.png)
 
-TODO 説明
+満水センサがONのときと、OFFになったときに発火するストリームを返す。
 
 ### errorWaterLevelTooLowUpdate
 
 ![errorWaterLevelTooLowUpdateのネットワーク図](../images/status/waterLevelTooLowUpdate.png)
 
-TODO 説明
-
+水位が0のときと、1以上になったときに発火するストリームを返す。
