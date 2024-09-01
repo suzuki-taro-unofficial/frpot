@@ -188,13 +188,7 @@ const boilButtonClickedAndLidClose = (
   lid: Stream<LidState>,
   boilButton: Stream<Unit>,
 ): Stream<Unit> => {
-  const c_prevLid = lid.hold("Open");
-  return boilButton
-    .snapshot(c_prevLid, (boilButton, prevLid) => {
-      return boilButton === Unit.UNIT && prevLid === "Close";
-    })
-    .filter((v) => v)
-    .mapTo(Unit.UNIT);
+  return boilButton.gate(lid.hold("Open").map((lid) => lid === "Close"));
 };
 
 // statusのストリームは更新があるときだけ発火する。
