@@ -24,8 +24,6 @@ const buttonClicked = ({
     .orElse(s_hotWaterSupplyButtonClicked);
 };
 
-//ビープストリーム
-//beepの実装は検討中
 type beepInput = {
   s_errorTemperatureTooHigh: Stream<Unit>;
   s_errorTemperatureNotIncreased: Stream<Unit>;
