@@ -82,6 +82,7 @@ export const core = ({
     s_tick,
     s_temperature: s_temperatureSensor,
     c_targetTemp: c_targetTemperature,
+    s_lid: s_lidStateSensor,
   });
 
   const s_status = status({
