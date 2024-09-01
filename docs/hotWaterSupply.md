@@ -6,9 +6,9 @@
 
 ## 入力
 
-・`s_tick` ティック
-・`c_lockState` ロック解除状態かどうかのセル。trueの時ロック解除状態。
-・`c_hotWaterSupplyButtonPushing` 給湯ボタンが押されているかどうかのセル。
+- `s_tick` ティック
+- `c_lockState` ロック解除状態かどうかのセル。trueの時ロック解除状態。
+- `c_hotWaterSupplyButtonPushing` 給湯ボタンが押されているかどうかのセル。
 
 ## 動作
 
