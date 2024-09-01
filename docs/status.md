@@ -116,7 +116,9 @@ statusは図のような関数の呼び出しを行っている。
 
 ### status
 
-TODO ネットワーク図と説明
+![statusのネットワーク図](../images/status/status.png)
+
+状態遷移の各イベントに対して、状態遷移を行った新しい状態を作る。新しい状態をorElseで優先順位を付けながらmergeしていく。mergeした結果に対して、前回から変更があった際にのみ発火するようにするchange関数を使う。change関数に通した結果を出力する。
 
 ### errorStatus
 
