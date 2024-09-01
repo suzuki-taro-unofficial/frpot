@@ -1,9 +1,11 @@
+import { LidState } from "@/app/types";
 import { Time } from "@/util/time";
 import { Cell, Stream, Unit } from "sodiumjs";
 
 type ErrorTemperatureNotIncreasedInput = {
   s_tick: Stream<number>;
   s_temperature: Stream<number>;
+  s_lid: Stream<LidState>;
   c_targetTemp: Cell<number>;
 };
 
@@ -11,9 +13,14 @@ type ErrorTemperatureNotIncreasedInput = {
 export const error_temperature_not_increased = ({
   s_tick,
   s_temperature,
+  s_lid,
   c_targetTemp,
 }: ErrorTemperatureNotIncreasedInput): Stream<Unit> => {
-  const s_oneMinutesPassed = Time.ms_passed(Time.minute_to_ms(1), s_tick);
+  const c_lid = s_lid.hold("Close");
+
+  const s_oneMinutesPassed = Time.ms_passed(Time.minute_to_ms(1), s_tick).gate(
+    c_lid.map((s) => s === "Close"),
+  );
 
   const c_currTemp = s_temperature.hold(0);
   const c_prevTemp = s_oneMinutesPassed.snapshot1(c_currTemp).hold(0);
