@@ -8,7 +8,7 @@
 
 ### ネットワーク図
 
-![error_temperature_not_increased.png](../images/error_temperature_not_increased.png)
+![error_temperature_not_increased](../images/error_temperature_not_increased.png)
 
 ### 入力
 
