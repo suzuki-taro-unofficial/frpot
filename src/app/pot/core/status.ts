@@ -24,14 +24,15 @@ type ErrorStatusUpdate = {
 };
 
 const errorTemperatureTooHighUpdate = (
-  inputs: StatusInput,
+  s_errorTemperatureTooHigh: Stream<Unit>,
+  s_temperatureSensor: Stream<number>,
 ): Stream<ErrorStatusUpdate> => {
-  return inputs.s_errorTemperatureTooHigh
+  return s_errorTemperatureTooHigh
     .mapTo<ErrorStatusUpdate>({
       temperatureTooHigh: true,
     })
     .orElse(
-      inputs.s_temperatureSensor
+      s_temperatureSensor
         .filter((temp) => temp < 100)
         .mapTo<ErrorStatusUpdate>({
           temperatureTooHigh: false,
@@ -40,14 +41,15 @@ const errorTemperatureTooHighUpdate = (
 };
 
 const errorTemperatureNotIncreasedUpdate = (
-  inputs: StatusInput,
+  s_errorTemperatureNotIncreased: Stream<Unit>,
+  s_lid: Stream<LidState>,
 ): Stream<ErrorStatusUpdate> => {
-  return inputs.s_errorTemperatureNotIncreased
+  return s_errorTemperatureNotIncreased
     .mapTo<ErrorStatusUpdate>({
       temperatureNotIncreased: true,
     })
     .orElse(
-      inputs.s_lid
+      s_lid
         .filter((lid) => lid === "Close")
         .mapTo<ErrorStatusUpdate>({
           temperatureNotIncreased: false,
@@ -56,25 +58,23 @@ const errorTemperatureNotIncreasedUpdate = (
 };
 
 const s_waterOverflowUpdate = (
-  inputs: StatusInput,
+  s_waterOverflowSensor: Stream<boolean>,
 ): Stream<ErrorStatusUpdate> => {
-  return inputs.s_waterOverflowSensor.map<ErrorStatusUpdate>((cond) => {
-    return {
-      waterOverflow: cond,
-    };
-  });
+  return s_waterOverflowSensor.map<ErrorStatusUpdate>((cond) => ({
+    waterOverflow: cond,
+  }));
 };
 
 const s_waterLevelTooLowUpdate = (
-  inputs: StatusInput,
+  s_waterLevelSensor: Stream<WaterLevel>,
 ): Stream<ErrorStatusUpdate> => {
-  return inputs.s_waterLevelSensor
+  return s_waterLevelSensor
     .filter((level) => level === 0)
     .mapTo<ErrorStatusUpdate>({
       waterLevelTooLow: true,
     })
     .orElse(
-      inputs.s_waterLevelSensor
+      s_waterLevelSensor
         .filter((level) => level > 0)
         .mapTo<ErrorStatusUpdate>({
           waterLevelTooLow: false,
@@ -96,14 +96,20 @@ const mergeErrorStatusUpdate: (
   };
 };
 
-// statusの各種停止状態について、それぞれの停止状態の条件が復旧されたかどうかを監視する
-// 障害状態と名付ける
+// エラーが発生した or 解消したときに発火するストリーム
 const errorStatus = (inputs: StatusInput): Stream<boolean> => {
-  const s_errorTemperatureTooHigh = errorTemperatureTooHighUpdate(inputs);
-  const s_errorTemperatureNotIncreased =
-    errorTemperatureNotIncreasedUpdate(inputs);
-  const s_waterOverflow = s_waterOverflowUpdate(inputs);
-  const s_waterLevelTooLow = s_waterLevelTooLowUpdate(inputs);
+  const s_errorTemperatureTooHigh = errorTemperatureTooHighUpdate(
+    inputs.s_errorTemperatureTooHigh,
+    inputs.s_temperatureSensor,
+  );
+  const s_errorTemperatureNotIncreased = errorTemperatureNotIncreasedUpdate(
+    inputs.s_errorTemperatureTooHigh,
+    inputs.s_lid,
+  );
+  const s_waterOverflow = s_waterOverflowUpdate(inputs.s_waterOverflowSensor);
+  const s_waterLevelTooLow = s_waterLevelTooLowUpdate(
+    inputs.s_waterLevelSensor,
+  );
 
   const cloop_errorStatus = new CellLoop<{
     temperatureTooHigh: boolean;
@@ -156,7 +162,7 @@ const errorStatus = (inputs: StatusInput): Stream<boolean> => {
 // 100度に到達した後、3分ごとに発火する
 const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
   const s_under100Degree = inputs.s_temperatureSensor
-    .filter((t) => t < 100 - 1) // -1度の誤差を許容する
+    .filter((t) => t < 100 - 1) // 1度の誤差を許容する
     .mapTo(Unit.UNIT);
 
   return Time.ms_passed(
@@ -202,7 +208,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     .filter((s) => !s)
     .snapshot<InnerStatus, InnerStatus>(
       cloop_prevInnnerStatus,
-      (_, prevStatus) => {return prevStatus},
+      (_, prevStatus) => prevStatus,
     )
     .filter((s) => s === "ErrorStop")
     .mapTo<InnerStatus>("NormalStop");
@@ -253,7 +259,9 @@ export const status = (inputs: StatusInput): Stream<Status> => {
   const s_turnOnKeepWarm = turnOnKeepWarm(inputs)
     .snapshot<InnerStatus, InnerStatus>(
       cloop_prevInnnerStatus,
-      (_, prevStatus) => {return prevStatus},
+      (_, prevStatus) => {
+        return prevStatus;
+      },
     )
     .filter((v) => v === "Boil")
     .mapTo<InnerStatus>("KeepWarm");
