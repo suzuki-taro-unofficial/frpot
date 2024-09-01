@@ -4,7 +4,7 @@
 
 ## ネットワーク図
 
-![target_temperature.png](../images/target_temperature.png)
+![target_temperatureのネットワーク図](../images/target_temperature.png)
 
 ## 入力
 
