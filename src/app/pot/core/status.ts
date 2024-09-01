@@ -196,14 +196,19 @@ export const status = (inputs: StatusInput): Stream<Status> => {
   type InnerStatus = "KeepWarm" | "Boil" | "NormalStop" | "ErrorStop";
   const cloop_prevInnnerStatus = new CellLoop<InnerStatus>();
   const s_errorOccured = errorStatus(inputs)
-    .filter((v) => v)
+    .filter((s) => s)
     .mapTo<InnerStatus>("ErrorStop");
   const s_errorRecovered = errorStatus(inputs)
-    .filter((v) => !v)
+    .filter((s) => !s)
+    .snapshot<InnerStatus, InnerStatus>(
+      cloop_prevInnnerStatus,
+      (_, prevStatus) => {return prevStatus},
+    )
+    .filter((s) => s === "ErrorStop")
     .mapTo<InnerStatus>("NormalStop");
   const s_lidChange = lidChange(inputs.s_lid);
   const s_lidOpen = s_lidChange
-    .filter((v) => v === "Open")
+    .filter((s) => s === "Open")
     .snapshot<InnerStatus, InnerStatus>(
       cloop_prevInnnerStatus,
       (_, prevStatus) => {
@@ -220,20 +225,13 @@ export const status = (inputs: StatusInput): Stream<Status> => {
       },
     );
   const s_lidClose = s_lidChange
-    .filter((v) => v === "Close")
+    .filter((s) => s === "Close")
     .snapshot<InnerStatus, InnerStatus>(
       cloop_prevInnnerStatus,
-      (_, prevStatus) => {
-        switch (prevStatus) {
-          case "NormalStop":
-            return "Boil";
-          case "ErrorStop":
-            return "ErrorStop";
-          default:
-            throw new Error("Invalid status");
-        }
-      },
-    );
+      (_, prevStatus) => prevStatus,
+    )
+    .filter((s) => s === "NormalStop")
+    .mapTo<InnerStatus>("Boil");
   const s_boilButtonClickedAndLidClose = boilButtonClickedAndLidClose(
     inputs.s_lid,
     inputs.s_boilButtonClicked,
@@ -252,11 +250,19 @@ export const status = (inputs: StatusInput): Stream<Status> => {
       }
     },
   );
+  const s_turnOnKeepWarm = turnOnKeepWarm(inputs)
+    .snapshot<InnerStatus, InnerStatus>(
+      cloop_prevInnnerStatus,
+      (_, prevStatus) => {return prevStatus},
+    )
+    .filter((v) => v === "Boil")
+    .mapTo<InnerStatus>("KeepWarm");
   const s_newInnnerStatus = s_errorOccured
     .orElse(s_errorRecovered)
     .orElse(s_lidOpen)
     .orElse(s_lidClose)
-    .orElse(s_boilButtonClickedAndLidClose);
+    .orElse(s_boilButtonClickedAndLidClose)
+    .orElse(s_turnOnKeepWarm);
 
   cloop_prevInnnerStatus.loop(s_newInnnerStatus.hold("NormalStop"));
 
