@@ -8,7 +8,7 @@
 
 ### ネットワーク図
 
-![error_temperature_not_increased.png](../images/error_temperature_not_increased.png)
+![error_temperature_not_increased](../images/error_temperature_not_increased.png)
 
 ### 入力
 
@@ -26,7 +26,7 @@
 このストリームが発火するたびに以下の動作をする。
 
 1. 現在の温度と1分前の温度を取得する。
-2. 現在温度が目標温度より5度低く、1分前より温度が下がっていたらエラーとして報告する。
+2. 現在温度が目標温度より5度低く、1分前より温度が下がっていたらエラーとして出力ストリームを発火させる。
 
 ## error_temperature_too_hight
 

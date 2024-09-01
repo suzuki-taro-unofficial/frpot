@@ -4,7 +4,7 @@
 
 ## ネットワーク図
 
-![simulator.png](../images/simulator.png)
+![simulatorのネットワーク図](../images/simulator.png)
 
 ## 入力
 
