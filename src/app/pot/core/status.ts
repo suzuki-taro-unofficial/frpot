@@ -113,9 +113,9 @@ const errorStatus = (inputs: StatusInput): Stream<boolean> => {
   }>();
 
   const s_mergedErrorStatus = s_errorTemperatureTooHigh
-    .merge(s_errorTemperatureNotIncreased, mergeFailureStatusUpdate)
-    .merge(s_waterOverflow, mergeFailureStatusUpdate)
-    .merge(s_waterLevelTooLow, mergeFailureStatusUpdate);
+    .merge(s_errorTemperatureNotIncreased, mergeErrorStatusUpdate)
+    .merge(s_waterOverflow, mergeErrorStatusUpdate)
+    .merge(s_waterLevelTooLow, mergeErrorStatusUpdate);
 
   const s_newErrorStatus = s_mergedErrorStatus.snapshot(
     cloop_errorStatus,
