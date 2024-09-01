@@ -70,7 +70,7 @@ export const app = (s_tick: Stream<number>): ViewItem => {
       new HStack(
         new VStack(
           temperatureLCD,
-          new HStack(warmHighLamp, warmMilkLamp, warmSavingLamp),
+          new HStack(warmHighLamp, warmSavingLamp, warmMilkLamp),
           warmingConfigButton,
         ),
       ),
