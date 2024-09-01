@@ -1,3 +1,4 @@
+import { Time } from "@/util/time";
 import { Cell, CellLoop, Stream, Transaction, Unit } from "sodiumjs";
 
 type TimerInput = {
@@ -12,12 +13,12 @@ type TimerOutput = {
 
 export const timer = (inputs: TimerInput): TimerOutput => {
   return Transaction.run(() => {
-    const s_add = inputs.s_timerButtonClicked.mapTo(-60 * 1000);
+    const s_add = inputs.s_timerButtonClicked.mapTo(Time.minute_to_ms(1));
     const c_remainigTime = new CellLoop<number>();
     const s_newTime = inputs.s_tick
-      .merge(s_add, (a, b) => a + b)
+      .merge(s_add, (elapsedTime, add) => add - elapsedTime)
       .snapshot(c_remainigTime, (delta, remaining) => {
-        return Math.max(0, remaining - delta) % (60 * 60 * 1000); // 最大1時間
+        return Math.max(0, remaining + delta) % Time.hour_to_ms(1); // 最大1時間
       });
     c_remainigTime.loop(s_newTime.hold(0));
     const s_beep = s_newTime
@@ -27,7 +28,9 @@ export const timer = (inputs: TimerInput): TimerOutput => {
       .filter(({ newTime, remaining }) => newTime === 0 && remaining > 0) // 残り時間が0になった最初の論理的時刻のみ通す
       .mapTo(new Unit());
     return {
-      c_remainigTime: c_remainigTime.map((time) => Math.ceil(time / 1000 / 60)),
+      c_remainigTime: c_remainigTime.map((time) =>
+        Math.ceil(Time.ms_to_minute(time)),
+      ),
       s_beep: s_beep,
     };
   });
