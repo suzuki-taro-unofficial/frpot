@@ -9,7 +9,7 @@
 ## 入力
 
 - `c_waterIn`
-- `c_tick`
+- `s_tick`
 - `c_heaterPower`
 - `c_hotWaterSupply`
 - `s_lid`
