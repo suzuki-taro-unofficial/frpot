@@ -57,7 +57,7 @@ const errorTemperatureNotIncreasedUpdate = (
     );
 };
 
-const s_waterOverflowUpdate = (
+const waterOverflowUpdate = (
   s_waterOverflowSensor: Stream<boolean>,
 ): Stream<ErrorStatusUpdate> => {
   return s_waterOverflowSensor.map<ErrorStatusUpdate>((cond) => ({
@@ -65,7 +65,7 @@ const s_waterOverflowUpdate = (
   }));
 };
 
-const s_waterLevelTooLowUpdate = (
+const waterLevelTooLowUpdate = (
   s_waterLevelSensor: Stream<WaterLevel>,
 ): Stream<ErrorStatusUpdate> => {
   return s_waterLevelSensor
@@ -97,19 +97,22 @@ const mergeErrorStatusUpdate: (
 };
 
 // エラーが発生した or 解消したときに発火するストリーム
-const errorStatus = (inputs: StatusInput): Stream<boolean> => {
-  const s_errorTemperatureTooHigh = errorTemperatureTooHighUpdate(
-    inputs.s_errorTemperatureTooHigh,
-    inputs.s_temperatureSensor,
+const errorStatus = (
+  s_errorTemperatureTooHigh: Stream<Unit>,
+  s_errorTemperatureNotIncreased: Stream<Unit>,
+  s_waterOverflowSensor: Stream<boolean>,
+  s_waterLevelSensor: Stream<WaterLevel>,
+  s_temperatureSensor: Stream<number>,
+  s_lid: Stream<LidState>,
+): Stream<boolean> => {
+  const s_errorTemperatureTooHighUpdate = errorTemperatureTooHighUpdate(
+    s_errorTemperatureTooHigh,
+    s_temperatureSensor,
   );
-  const s_errorTemperatureNotIncreased = errorTemperatureNotIncreasedUpdate(
-    inputs.s_errorTemperatureTooHigh,
-    inputs.s_lid,
-  );
-  const s_waterOverflow = s_waterOverflowUpdate(inputs.s_waterOverflowSensor);
-  const s_waterLevelTooLow = s_waterLevelTooLowUpdate(
-    inputs.s_waterLevelSensor,
-  );
+  const s_errorTemperatureNotIncreasedUpdate =
+    errorTemperatureNotIncreasedUpdate(s_errorTemperatureNotIncreased, s_lid);
+  const s_waterOverflowUpdate = waterOverflowUpdate(s_waterOverflowSensor);
+  const s_waterLevelTooLowUpdate = waterLevelTooLowUpdate(s_waterLevelSensor);
 
   const cloop_errorStatus = new CellLoop<{
     temperatureTooHigh: boolean;
@@ -118,10 +121,10 @@ const errorStatus = (inputs: StatusInput): Stream<boolean> => {
     waterLevelTooLow: boolean;
   }>();
 
-  const s_mergedErrorStatus = s_errorTemperatureTooHigh
-    .merge(s_errorTemperatureNotIncreased, mergeErrorStatusUpdate)
-    .merge(s_waterOverflow, mergeErrorStatusUpdate)
-    .merge(s_waterLevelTooLow, mergeErrorStatusUpdate);
+  const s_mergedErrorStatus = s_errorTemperatureTooHighUpdate
+    .merge(s_errorTemperatureNotIncreasedUpdate, mergeErrorStatusUpdate)
+    .merge(s_waterOverflowUpdate, mergeErrorStatusUpdate)
+    .merge(s_waterLevelTooLowUpdate, mergeErrorStatusUpdate);
 
   const s_newErrorStatus = s_mergedErrorStatus.snapshot(
     cloop_errorStatus,
@@ -160,15 +163,18 @@ const errorStatus = (inputs: StatusInput): Stream<boolean> => {
 
 // 保温状態に入るタイミングを監視する
 // 100度に到達した後、3分ごとに発火する
-const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
-  const s_under100Degree = inputs.s_temperatureSensor
+const turnOnKeepWarm = (
+  s_temperatureSensor: Stream<number>,
+  s_tick: Stream<number>,
+): Stream<Unit> => {
+  const s_under100Degree = s_temperatureSensor
     .filter((t) => t < 100 - 1) // 1度の誤差を許容する
     .mapTo(Unit.UNIT);
 
   return Time.ms_passed(
     // テストのため10秒にしている
     Time.second_to_ms(10),
-    inputs.s_tick,
+    s_tick,
     // 100度以下の時は計測をリセット
     s_under100Degree,
   );
@@ -201,10 +207,18 @@ const boilButtonClickedAndLidClose = (
 export const status = (inputs: StatusInput): Stream<Status> => {
   type InnerStatus = "KeepWarm" | "Boil" | "NormalStop" | "ErrorStop";
   const cloop_prevInnnerStatus = new CellLoop<InnerStatus>();
-  const s_errorOccured = errorStatus(inputs)
+  const s_errorStatus = errorStatus(
+    inputs.s_errorTemperatureTooHigh,
+    inputs.s_errorTemperatureNotIncreased,
+    inputs.s_waterOverflowSensor,
+    inputs.s_waterLevelSensor,
+    inputs.s_temperatureSensor,
+    inputs.s_lid,
+  );
+  const s_errorOccured = s_errorStatus
     .filter((s) => s)
     .mapTo<InnerStatus>("ErrorStop");
-  const s_errorRecovered = errorStatus(inputs)
+  const s_errorRecovered = s_errorStatus
     .filter((s) => !s)
     .snapshot<InnerStatus, InnerStatus>(
       cloop_prevInnnerStatus,
@@ -256,7 +270,10 @@ export const status = (inputs: StatusInput): Stream<Status> => {
       }
     },
   );
-  const s_turnOnKeepWarm = turnOnKeepWarm(inputs)
+  const s_turnOnKeepWarm = turnOnKeepWarm(
+    inputs.s_temperatureSensor,
+    inputs.s_tick,
+  )
     .snapshot<InnerStatus, InnerStatus>(
       cloop_prevInnnerStatus,
       (_, prevStatus) => {
