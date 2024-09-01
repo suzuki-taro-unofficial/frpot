@@ -46,8 +46,8 @@ export const app = (s_tick: Stream<number>): ViewItem => {
     return potOut;
   });
 
-  potOut.s_beep.listen(() => {
-    beep();
+  potOut.s_beep.listen((b) => {
+    beep(b);
   });
 
   // 出力のユーザインタフェース生成
