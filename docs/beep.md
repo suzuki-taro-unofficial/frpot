@@ -1,6 +1,8 @@
 # beep
 
-![beep.png](../images/beep.png)
+## ネットワーク
+
+![beepのネットワーク図](../images/beep.png)
 
 ## 概要
 

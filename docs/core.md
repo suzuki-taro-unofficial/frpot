@@ -9,7 +9,7 @@
 
 ## ネットワーク図
 
-![core.png](../images/core.png)
+![coreのネットワーク図](../images/core.png)
 
 ## 入力
 
