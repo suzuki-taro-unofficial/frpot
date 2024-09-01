@@ -168,24 +168,11 @@ const turnOnKeepWarm = (inputs: StatusInput): Stream<Unit> => {
   );
 };
 
-const lidChange = (lid: Stream<LidState>): Stream<LidState> => {
+const lidClose = (lid: Stream<LidState>): Stream<Unit> => {
   const c_prevLid = lid.hold("Open");
   return lid
     .snapshot(c_prevLid, (newLid, prevLid) => {
-      return { newLid: newLid, change: newLid !== prevLid };
-    })
-    .filter((v) => v.change)
-    .map((v) => v.newLid);
-};
-
-const boilButtonClickedAndLidClose = (
-  lid: Stream<LidState>,
-  boilButton: Stream<Unit>,
-): Stream<Unit> => {
-  const c_prevLid = lid.hold("Open");
-  return boilButton
-    .snapshot(c_prevLid, (boilButton, prevLid) => {
-      return boilButton === Unit.UNIT && prevLid === "Close";
+      return newLid === "Close" && prevLid === "Open";
     })
     .filter((v) => v)
     .mapTo(Unit.UNIT);
@@ -193,88 +180,57 @@ const boilButtonClickedAndLidClose = (
 
 // statusのストリームは更新があるときだけ発火する。
 export const status = (inputs: StatusInput): Stream<Status> => {
-  type InnerStatus = "KeepWarm" | "Boil" | "NormalStop" | "ErrorStop";
-  const cloop_prevInnnerStatus = new CellLoop<InnerStatus>();
-  const s_errorOccured = errorStatus(inputs)
-    .filter((v) => v)
-    .mapTo<InnerStatus>("ErrorStop");
-  const s_errorRecovered = errorStatus(inputs)
-    .filter((v) => !v)
-    .mapTo<InnerStatus>("NormalStop");
-  const s_lidChange = lidChange(inputs.s_lid);
-  const s_lidOpen = s_lidChange
-    .filter((v) => v === "Open")
-    .snapshot<InnerStatus, InnerStatus>(
-      cloop_prevInnnerStatus,
-      (_, prevStatus) => {
-        switch (prevStatus) {
-          case "KeepWarm":
-            return "NormalStop";
-          case "Boil":
-            return "NormalStop";
-          case "NormalStop":
-            return "NormalStop";
-          case "ErrorStop":
-            return "ErrorStop";
-        }
-      },
-    );
-  const s_lidClose = s_lidChange
-    .filter((v) => v === "Close")
-    .snapshot<InnerStatus, InnerStatus>(
-      cloop_prevInnnerStatus,
-      (_, prevStatus) => {
-        switch (prevStatus) {
-          case "NormalStop":
-            return "Boil";
-          case "ErrorStop":
-            return "ErrorStop";
-          default:
-            throw new Error("Invalid status");
-        }
-      },
-    );
-  const s_boilButtonClickedAndLidClose = boilButtonClickedAndLidClose(
-    inputs.s_lid,
-    inputs.s_boilButtonClicked,
-  ).snapshot<InnerStatus, InnerStatus>(
-    cloop_prevInnnerStatus,
-    (_, prevStatus) => {
-      switch (prevStatus) {
-        case "NormalStop":
-          return "Boil";
-        case "Boil":
-          return "Boil";
-        case "KeepWarm":
-          return "Boil";
-        case "ErrorStop":
-          return "ErrorStop";
-      }
+  // デフォルト値にc_failureStatusを使いs_failureStatusが発火したときはs_failureStatusを使う
+  const s_errorStatus = errorStatus(inputs);
+  const c_errorStatus = s_errorStatus.hold(false);
+  const s_turnOnKeepWarm = turnOnKeepWarm(inputs);
+  const s_lidClose = lidClose(inputs.s_lid);
+  const cloop_prevStatus = new CellLoop<Status>();
+
+  type StatusUpdate = {
+    status: Status;
+    failure: boolean;
+  };
+  const s_boilButtonClickedStatus =
+    inputs.s_boilButtonClicked.mapTo<Status>("Boil");
+  const s_lidCloseStatus = s_lidClose.mapTo<Status>("Boil");
+  const s_turnOnKeepWarmStatus = s_turnOnKeepWarm.mapTo<Status>("KeepWarm");
+  // 沸騰・保温のストリームが発火したときは、新しいstatusと古いfailureStatusを使う
+  const s_mergedUpdate = s_boilButtonClickedStatus
+    .orElse(s_lidCloseStatus)
+    .orElse(s_turnOnKeepWarmStatus)
+    .snapshot<boolean, StatusUpdate>(c_failureStatus, (status, failure) => {
+      return {
+        status,
+        failure,
+      };
+    });
+  // failureStatusが発火したときは、前回のstatusと新しいfailureStatusを使う
+  const s_failureStatusUpdate = s_failureStatus.snapshot<Status, StatusUpdate>(
+    cloop_prevStatus,
+    (failure, prevStatus) => {
+      return {
+        status: prevStatus,
+        failure,
+      };
     },
   );
-  const s_newInnnerStatus = s_errorOccured
-    .orElse(s_errorRecovered)
-    .orElse(s_lidOpen)
-    .orElse(s_lidClose)
-    .orElse(s_boilButtonClickedAndLidClose);
-
-  cloop_prevInnnerStatus.loop(s_newInnnerStatus.hold("NormalStop"));
-
-  const cloop_prevOuterStatus = new CellLoop<Status>();
-  const s_newOuterStatus = s_newInnnerStatus
-    .map<Status>((innerStatus) => {
-      switch (innerStatus) {
-        case "KeepWarm":
-          return "KeepWarm";
-        case "Boil":
-          return "Boil";
-        case "NormalStop":
-          return "Stop";
-        case "ErrorStop":
-          return "Stop";
-      }
+  // 沸騰・保温のストリームとfailureStatusが同時に起こったとき(フタを閉めたときなど、よく発生する)は、新しい情報を使う
+  const s_newStatus = s_mergedUpdate
+    .merge(s_failureStatusUpdate, (other, failure) => {
+      return {
+        status: other.status,
+        failure: failure.failure,
+      };
     })
-    .snapshot(cloop_prevOuterStatus, (newStatus, prevStatus) => {
+    .map(({ status, failure }) => {
+      return failure ? "Stop" : status;
+    });
+
+  cloop_prevStatus.loop(s_newStatus.hold("Stop"));
+  // このストリームは、statusが更新されたときだけ発火する
+  return s_newStatus
+    .snapshot(cloop_prevStatus, (newStatus, prevStatus) => {
       return {
         newStatus,
         prevStatus,
@@ -286,6 +242,4 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     .map(({ newStatus }) => {
       return newStatus;
     });
-  cloop_prevOuterStatus.loop(s_newOuterStatus.hold("Stop"));
-  return s_newOuterStatus;
 };
