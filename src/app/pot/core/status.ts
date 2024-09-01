@@ -2,6 +2,7 @@ import { Stream, Unit, CellLoop } from "sodiumjs";
 import { LidState, WaterLevel } from "../../types";
 import { Status } from "../types";
 import { Time } from "@/util/time";
+import { change } from "@/util/change";
 
 type StatusInput = {
   s_temperatureSensor: Stream<number>;
@@ -180,16 +181,6 @@ const turnOnKeepWarm = (
   );
 };
 
-const lidChange = (lid: Stream<LidState>): Stream<LidState> => {
-  const c_prevLid = lid.hold("Open");
-  return lid
-    .snapshot(c_prevLid, (newLid, prevLid) => {
-      return { newLid: newLid, change: newLid !== prevLid };
-    })
-    .filter((v) => v.change)
-    .map((v) => v.newLid);
-};
-
 const boilButtonClickedAndLidClose = (
   lid: Stream<LidState>,
   boilButton: Stream<Unit>,
@@ -217,7 +208,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     .snapshot1(cloop_prevInnnerStatus)
     .filter((s) => s === "ErrorStop")
     .mapTo<InnerStatus>("NormalStop");
-  const s_lidChange = lidChange(inputs.s_lid);
+  const s_lidChange = change(inputs.s_lid, "Open");
   const s_lidOpen = s_lidChange
     .filter((s) => s === "Open")
     .snapshot<InnerStatus, InnerStatus>(
@@ -274,9 +265,8 @@ export const status = (inputs: StatusInput): Stream<Status> => {
 
   cloop_prevInnnerStatus.loop(s_newInnnerStatus.hold("NormalStop"));
 
-  const cloop_prevOuterStatus = new CellLoop<Status>();
-  const s_newOuterStatus = s_newInnnerStatus
-    .map<Status>((innerStatus) => {
+  const s_newOuterStatus = change(
+    s_newInnnerStatus.map<Status>((innerStatus) => {
       switch (innerStatus) {
         case "KeepWarm":
           return "KeepWarm";
@@ -287,19 +277,9 @@ export const status = (inputs: StatusInput): Stream<Status> => {
         case "ErrorStop":
           return "Stop";
       }
-    })
-    .snapshot(cloop_prevOuterStatus, (newStatus, prevStatus) => {
-      return {
-        newStatus,
-        prevStatus,
-      };
-    })
-    .filter(({ newStatus, prevStatus }) => {
-      return newStatus !== prevStatus;
-    })
-    .map(({ newStatus }) => {
-      return newStatus;
-    });
-  cloop_prevOuterStatus.loop(s_newOuterStatus.hold("Stop"));
+    }),
+    "Stop",
+  );
+
   return s_newOuterStatus;
 };
