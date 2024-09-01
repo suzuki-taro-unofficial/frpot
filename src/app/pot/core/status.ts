@@ -205,10 +205,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     .mapTo<InnerStatus>("ErrorStop");
   const s_errorRecovered = s_errorStatus
     .filter((s) => !s)
-    .snapshot<InnerStatus, InnerStatus>(
-      cloop_prevInnnerStatus,
-      (_, prevStatus) => prevStatus,
-    )
+    .snapshot1(cloop_prevInnnerStatus)
     .filter((s) => s === "ErrorStop")
     .mapTo<InnerStatus>("NormalStop");
   const s_lidChange = change(inputs.s_lid, "Open");
@@ -231,10 +228,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     );
   const s_lidClose = s_lidChange
     .filter((s) => s === "Close")
-    .snapshot<InnerStatus, InnerStatus>(
-      cloop_prevInnnerStatus,
-      (_, prevStatus) => prevStatus,
-    )
+    .snapshot1(cloop_prevInnnerStatus)
     .filter((s) => s === "NormalStop")
     .mapTo<InnerStatus>("Boil");
   const s_boilButtonClickedAndLidClose = boilButtonClickedAndLidClose(
@@ -259,12 +253,7 @@ export const status = (inputs: StatusInput): Stream<Status> => {
     inputs.s_temperatureSensor,
     inputs.s_tick,
   )
-    .snapshot<InnerStatus, InnerStatus>(
-      cloop_prevInnnerStatus,
-      (_, prevStatus) => {
-        return prevStatus;
-      },
-    )
+    .snapshot1(cloop_prevInnnerStatus)
     .filter((v) => v === "Boil")
     .mapTo<InnerStatus>("KeepWarm");
   const s_newInnnerStatus = s_errorOccured
