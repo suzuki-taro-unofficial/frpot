@@ -16,7 +16,7 @@ type StatusInput = {
 
 // 各種ストリームをこの更新用の型に変換する
 // 更新しない場合はnullを入れる
-type FailureStatusUpdate = {
+type ErrorStatusUpdate = {
   temperatureTooHigh?: boolean;
   temperatureNotIncreased?: boolean;
   waterOverflow?: boolean;
@@ -26,15 +26,15 @@ type FailureStatusUpdate = {
 
 const errorTemperatureTooHighUpdate = (
   inputs: StatusInput,
-): Stream<FailureStatusUpdate> => {
+): Stream<ErrorStatusUpdate> => {
   return inputs.s_errorTemperatureTooHigh
-    .mapTo<FailureStatusUpdate>({
+    .mapTo<ErrorStatusUpdate>({
       temperatureTooHigh: true,
     })
     .orElse(
       inputs.s_temperatureSensor
         .filter((temp) => temp < 100)
-        .mapTo<FailureStatusUpdate>({
+        .mapTo<ErrorStatusUpdate>({
           temperatureTooHigh: false,
         }),
     );
@@ -42,15 +42,15 @@ const errorTemperatureTooHighUpdate = (
 
 const errorTemperatureNotIncreasedUpdate = (
   inputs: StatusInput,
-): Stream<FailureStatusUpdate> => {
+): Stream<ErrorStatusUpdate> => {
   return inputs.s_errorTemperatureNotIncreased
-    .mapTo<FailureStatusUpdate>({
+    .mapTo<ErrorStatusUpdate>({
       temperatureNotIncreased: true,
     })
     .orElse(
       inputs.s_lid
         .filter((lid) => lid === "Close")
-        .mapTo<FailureStatusUpdate>({
+        .mapTo<ErrorStatusUpdate>({
           temperatureNotIncreased: false,
         }),
     );
@@ -58,8 +58,8 @@ const errorTemperatureNotIncreasedUpdate = (
 
 const s_waterOverflowUpdate = (
   inputs: StatusInput,
-): Stream<FailureStatusUpdate> => {
-  return inputs.s_waterOverflowSensor.map<FailureStatusUpdate>((cond) => {
+): Stream<ErrorStatusUpdate> => {
+  return inputs.s_waterOverflowSensor.map<ErrorStatusUpdate>((cond) => {
     return {
       waterOverflow: cond,
     };
@@ -68,41 +68,41 @@ const s_waterOverflowUpdate = (
 
 const s_waterLevelTooLowUpdate = (
   inputs: StatusInput,
-): Stream<FailureStatusUpdate> => {
+): Stream<ErrorStatusUpdate> => {
   return inputs.s_waterLevelSensor
     .filter((level) => level === 0)
-    .mapTo<FailureStatusUpdate>({
+    .mapTo<ErrorStatusUpdate>({
       waterLevelTooLow: true,
     })
     .orElse(
       inputs.s_waterLevelSensor
         .filter((level) => level > 0)
-        .mapTo<FailureStatusUpdate>({
+        .mapTo<ErrorStatusUpdate>({
           waterLevelTooLow: false,
         }),
     );
 };
 
-const s_lidOpenUpdate = (inputs: StatusInput): Stream<FailureStatusUpdate> => {
+const s_lidOpenUpdate = (inputs: StatusInput): Stream<ErrorStatusUpdate> => {
   return inputs.s_lid
     .filter((lid) => lid === "Open")
-    .mapTo<FailureStatusUpdate>({
+    .mapTo<ErrorStatusUpdate>({
       lidOpen: true,
     })
     .orElse(
       inputs.s_lid
         .filter((lid) => lid === "Close")
-        .mapTo<FailureStatusUpdate>({
+        .mapTo<ErrorStatusUpdate>({
           lidOpen: false,
         }),
     );
 };
 
 // 今回は左辺でfalse, 右辺でtrueが来るようなことはないので、??演算子で十分
-const mergeFailureStatusUpdate: (
-  a: FailureStatusUpdate,
-  b: FailureStatusUpdate,
-) => FailureStatusUpdate = (a, b) => {
+const mergeErrorStatusUpdate: (
+  a: ErrorStatusUpdate,
+  b: ErrorStatusUpdate,
+) => ErrorStatusUpdate = (a, b) => {
   return {
     temperatureTooHigh: a.temperatureTooHigh ?? b.temperatureTooHigh,
     temperatureNotIncreased:
