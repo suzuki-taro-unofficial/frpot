@@ -2,7 +2,7 @@
 
 ## ネットワーク図
 
-![heaterPower.png](../images/heaterPower.png)
+![heaterPowerのネットワーク図](../images/heaterPower.png)
 
 ## 概要
 
