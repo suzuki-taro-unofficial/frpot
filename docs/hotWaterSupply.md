@@ -2,7 +2,7 @@
 
 給湯状態を管理するモジュール
 
-![hotWaterSupply](../images/hotWaterSupply.png)
+![hotWaterSupplyのネットワーク図](../images/hotWaterSupply.png)
 
 ## 入力
 
