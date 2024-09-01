@@ -16,7 +16,8 @@ export const timer = (inputs: TimerInput): TimerOutput => {
     const s_add = inputs.s_timerButtonClicked.mapTo(Time.minute_to_ms(1));
     const c_remainigTime = new CellLoop<number>();
     const s_accumalatedTime = inputs.s_tick
-      .merge(s_add, (elapsedTime, add) => add - elapsedTime)
+      .map((s_tick) => -s_tick)
+      .merge(s_add, (elapsedTime, add) => add + elapsedTime)
       .snapshot(c_remainigTime, (delta, remaining) => remaining + delta);
 
     const s_newTime = s_accumalatedTime.map(
