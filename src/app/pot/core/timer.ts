@@ -15,18 +15,19 @@ export const timer = (inputs: TimerInput): TimerOutput => {
   return Transaction.run(() => {
     const s_add = inputs.s_timerButtonClicked.mapTo(Time.minute_to_ms(1));
     const c_remainigTime = new CellLoop<number>();
-    const s_newTime = inputs.s_tick
+    const s_accumalatedTime = inputs.s_tick
       .merge(s_add, (elapsedTime, add) => add - elapsedTime)
-      .snapshot(c_remainigTime, (delta, remaining) => {
-        return Math.max(0, remaining + delta) % Time.hour_to_ms(1); // 最大1時間
-      });
+      .snapshot(c_remainigTime, (delta, remaining) => remaining + delta);
+
+    const s_newTime = s_accumalatedTime.map(
+      (hoge) => Math.max(0, hoge) % Time.hour_to_ms(1),
+    );
     c_remainigTime.loop(s_newTime.hold(0));
-    const s_beep = s_newTime
-      .snapshot(c_remainigTime, (newTime, remaining) => {
-        return { newTime, remaining };
-      })
-      .filter(({ newTime, remaining }) => newTime === 0 && remaining > 0) // 残り時間が0になった最初の論理的時刻のみ通す
+
+    const s_beep = s_accumalatedTime
+      .filter((hoge) => hoge === 0)
       .mapTo(new Unit());
+
     return {
       c_remainigTime: c_remainigTime.map((time) =>
         Math.ceil(Time.ms_to_minute(time)),
