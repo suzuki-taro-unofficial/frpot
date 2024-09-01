@@ -87,3 +87,68 @@
   - 満水センサがOFFになれば復旧する。停止状態のままだけだけど、他のイベントによって沸騰状態に移行する。
 - 水位が0のとき
   - 水位が1以上に慣れば復旧する。停止状態のままだけど、他のイベントによって沸騰状態に移行する。
+
+## 実装
+
+![status以下の呼び出し関係](../images/status/status_call.png)
+
+statusは図のような関数の呼び出しを行っている。
+
+### 各関数の説明
+
+- lidChange
+  - フタが開いたとき、閉じたときのみ発火するストリームを返す。
+- boilButtonClickedAndLidClosed
+	- 沸騰ボタンが押されたときかつ、フタが閉じているときのみ発火するストリームを返す。
+- turnOnKeepWarm
+	- 100度に達してから3分後に発火するストリームを返す。
+	- 今はデバッグ用に10秒後に発火するようにしている。
+- errorStatus
+  - 異常停止状態になる際と、異常停止状態からの復旧の際に発火するストリームを返す。
+- errorTemperatureTooHighUpdate
+	- オーバーヒートした祭と、オーバーヒートからの復旧の際に発火するストリームを返す。
+- errorTemperatureNotIncreasedUpdate
+	- 温度上がらずエラーが発生した際と、温度上がらずエラーからの復旧の際に発火するストリームを返す。
+- errorWaterOverflowUpdate
+	- 満水センサがONのときと、OFFになったときに発火するストリームを返す。
+- errorWaterLevelTooLowUpdate
+	- 水位が0のときと、1以上になったときに発火するストリームを返す。
+
+### status
+
+TODO ネットワーク図と説明
+
+### errorStatus
+
+異常停止状態に遷移する祭と、異常停止状態からの復旧の際に発火するストリームを返す。内部で$2^4 = 16$パターンの状態を持っていて、それぞれの要因ごとに障害と復旧を管理している。戻り値のストリームは、全ての要因が復旧した際にfalseを、異常停止状態になった際にtrueを発火する。
+
+![errorStatusのネットワーク図](../images/status/errorStatus.png)
+
+![errorStatusのタイミング図](../images/status/errorStatus_timing.png)
+
+各要因の障害・復旧は同じ論理的時刻で行われることがある。要因Aと要因Bで考えると、図のように要因Aと要因Bが同じ論理的時刻で行われることがある。なので、要因Aが障害になったという情報と、要因Bが障害になったという情報を両方残すようにmergeしている。
+
+### errorTemperatureTooHighUpdate
+
+![errorTemperatureTooHighUpdateのネットワーク図](../images/status/errorTemperatureTooHighUpdate.png)
+
+
+
+### errorTemperatureNotIncreasedUpdate
+
+![errorTemperatureNotIncreasedUpdateのネットワーク図](../images/status/errorTemperatureNotIncreasedUpdate.png)
+
+TODO 説明
+
+### errorWaterOverflowUpdate
+
+![errorWaterOverflowUpdateのネットワーク図](../images/status/waterOverflowUpdate.png)
+
+TODO 説明
+
+### errorWaterLevelTooLowUpdate
+
+![errorWaterLevelTooLowUpdateのネットワーク図](../images/status/waterLevelTooLowUpdate.png)
+
+TODO 説明
+
