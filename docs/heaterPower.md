@@ -10,10 +10,10 @@
 
 ## 入力
 
-・`s_waterLevelSensor`
-・`c_targetTemperature`
-・`c_status`
-・`c_temperature`
+- `s_waterLevelSensor`
+- `c_targetTemperature`
+- `c_status`
+- `c_temperature`
 
 ## 仕様
 
