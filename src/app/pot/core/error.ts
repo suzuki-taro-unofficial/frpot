@@ -9,7 +9,6 @@ type ErrorTemperatureNotIncreasedInput = {
   c_targetTemp: Cell<number>;
 };
 
-// FIXME: 壊れた実装かもしれない
 export const error_temperature_not_increased = ({
   s_tick,
   s_temperature,
