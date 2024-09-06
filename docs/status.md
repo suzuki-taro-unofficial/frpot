@@ -112,7 +112,7 @@ statusは図のような関数の呼び出しを行っている。
   - errorTemperatureNotIncreasedUpdate
     - 温度上がらずエラーが発生した際と、温度上がらずエラーからの復旧の際に発火するストリームを返す。
   - errorWaterOverflowUpdate
-    - 満水センサがONのときと、OFFになったときに発火するストリームを返す。
+    - 満水センサがONになったときと、OFFになったときに発火するストリームを返す。
   - errorWaterLevelTooLowUpdate
     - 水位が0のときと、1以上になったときに発火するストリームを返す。
 
@@ -160,7 +160,7 @@ ms_passedは第1引数で指定された間隔でストリームを発火させ�
 
 ### errorWaterOverflowUpdate
 
-満水センサがONのときと、OFFになったときに発火するストリームを返す。
+満水センサがONになったときと、OFFになったときに発火するストリームを返す。
 
 ![errorWaterOverflowUpdateのネットワーク図](../images/status/waterOverflowUpdate.png)
 
