@@ -182,10 +182,10 @@ const turnOnKeepWarm = (
 };
 
 const boilButtonClickedAndLidClose = (
-  lid: Stream<LidState>,
-  boilButton: Stream<Unit>,
+  s_lid: Stream<LidState>,
+  s_boilButtonClicked: Stream<Unit>,
 ): Stream<Unit> => {
-  return boilButton.gate(lid.hold("Open").map((lid) => lid === "Close"));
+  return s_boilButtonClicked.gate(s_lid.hold("Open").map((lid) => lid === "Close"));
 };
 
 // statusのストリームは更新があるときだけ発火する。

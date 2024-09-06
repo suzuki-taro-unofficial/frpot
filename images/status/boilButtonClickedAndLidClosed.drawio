@@ -1,0 +1,61 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" version="24.7.10">
+  <diagram id="bthfR-QZZWKckr_qiz-K" name="ページ1">
+    <mxGraphModel dx="1384" dy="643" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="5VRAvVUR2-phpQkzf3P--2" value="s_lid" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Helvetica;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="115" y="460" width="45" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="5VRAvVUR2-phpQkzf3P--3" value="s_boilButtonClicked" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Helvetica;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="80" y="540" width="115" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="5VRAvVUR2-phpQkzf3P--4" value="hold&lt;div&gt;&quot;Open&quot;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="200" y="450" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="5VRAvVUR2-phpQkzf3P--5" value="map&lt;div&gt;lid === &quot;Close&quot;&lt;/div&gt;" style="shape=offPageConnector;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontColor=default;labelBackgroundColor=default;direction=north;" vertex="1" parent="1">
+          <mxGeometry x="320" y="450" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="5VRAvVUR2-phpQkzf3P--6" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="5VRAvVUR2-phpQkzf3P--2" target="5VRAvVUR2-phpQkzf3P--4">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="290" y="580" as="sourcePoint" />
+            <mxPoint x="340" y="530" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5VRAvVUR2-phpQkzf3P--7" value="" style="endArrow=diamond;html=1;rounded=0;endFill=0;" edge="1" parent="1" source="5VRAvVUR2-phpQkzf3P--4" target="5VRAvVUR2-phpQkzf3P--5">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="290" y="580" as="sourcePoint" />
+            <mxPoint x="340" y="530" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5VRAvVUR2-phpQkzf3P--8" value="gate" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="520" width="80" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="5VRAvVUR2-phpQkzf3P--9" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="5VRAvVUR2-phpQkzf3P--3" target="5VRAvVUR2-phpQkzf3P--8">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="350" y="620" as="sourcePoint" />
+            <mxPoint x="400" y="570" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5VRAvVUR2-phpQkzf3P--10" value="" style="endArrow=diamond;html=1;rounded=0;endFill=0;" edge="1" parent="1" source="5VRAvVUR2-phpQkzf3P--5" target="5VRAvVUR2-phpQkzf3P--8">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="460" y="460" as="sourcePoint" />
+            <mxPoint x="500" y="460" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="460" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5VRAvVUR2-phpQkzf3P--11" value="" style="endArrow=classic;html=1;rounded=0;entryX=1.003;entryY=1.04;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="5VRAvVUR2-phpQkzf3P--8" target="5VRAvVUR2-phpQkzf3P--12">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="560" y="620" as="sourcePoint" />
+            <mxPoint x="600" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5VRAvVUR2-phpQkzf3P--12" value="boilButtonClickedAndLidClosed" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="520" y="520" width="190" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
