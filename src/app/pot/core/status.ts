@@ -50,7 +50,7 @@ const errorTemperatureNotIncreasedUpdate = (
       temperatureNotIncreased: true,
     })
     .orElse(
-      s_lid
+      change(s_lid, "Open")
         .filter((lid) => lid === "Close")
         .mapTo<ErrorStatusUpdate>({
           temperatureNotIncreased: false,
@@ -185,7 +185,9 @@ const boilButtonClickedAndLidClose = (
   s_lid: Stream<LidState>,
   s_boilButtonClicked: Stream<Unit>,
 ): Stream<Unit> => {
-  return s_boilButtonClicked.gate(s_lid.hold("Open").map((lid) => lid === "Close"));
+  return s_boilButtonClicked.gate(
+    s_lid.hold("Open").map((lid) => lid === "Close"),
+  );
 };
 
 // statusのストリームは更新があるときだけ発火する。
