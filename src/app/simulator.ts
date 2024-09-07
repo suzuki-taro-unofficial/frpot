@@ -99,7 +99,7 @@ export const simulator = ({
         c_lid,
         (deltaTime, water, should_in, should_out, power, lid) => {
           const in_water =
-            lid == "Open" && should_in
+            lid === "Open" && should_in
               ? new Water(
                   pourPerSec * Time.ms_to_second(deltaTime),
                   0,
