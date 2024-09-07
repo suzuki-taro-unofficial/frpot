@@ -33,7 +33,7 @@ export const simulator = ({
   const actualCapacity = capacity + 200;
   const emitPerSec = 100;
   const pourPerSec = 100;
-  const decTempPerSec = 1 / 180;
+  const decJoulePerSec = 1 / 180;
 
   const c_lid = s_lid.accum<LidState>("Open", (_, state) =>
     state === "Open" ? "Close" : "Open",
@@ -63,34 +63,47 @@ export const simulator = ({
       .hold(0),
   );
 
-  // 現在の水の温度で単位は°C
-  const cloop_temp = new CellLoop<number>();
-  cloop_temp.loop(
+  // 現在のポットの熱量
+  const cloop_joule = new CellLoop<number>();
+  cloop_joule.loop(
     s_tick
-      .snapshot4(
-        cloop_temp,
+      .snapshot5(
         cloop_amount,
+        cloop_joule,
+        c_hotWaterSupply,
         c_heaterPower,
-        (deltaTime, temp, amount, power) => {
-          temp -= decTempPerSec * Time.ms_to_second(deltaTime);
-          temp = Math.max(temp, 0);
+        (deltaTime, amount, joule, should_out, power) => {
+          const maxJoule = amount * 100 * 4.2;
+          joule -= decJoulePerSec * Time.ms_to_second(deltaTime);
+          joule += power * Time.ms_to_second(deltaTime);
+          joule = Math.min(joule, maxJoule);
+          joule = Math.max(joule, 0);
 
-          const joule = power * Time.ms_to_second(deltaTime);
-          if (amount <= 10) {
-            // 水の量が極端に少ないなら異常加熱
-            return { cond: true, temp: temp + joule }; // TODO: 良い感じの温度変化
-          } else {
-            return { cond: false, temp: temp + joule / 4.2 / amount };
-          }
+          const out_amount = should_out
+            ? emitPerSec * Time.ms_to_second(deltaTime)
+            : 0;
+          const out_joule = (joule * out_amount) / amount;
+          if (!Number.isNaN(out_joule) && Number.isFinite(out_joule))
+            joule -= (joule * out_amount) / amount;
+
+          return joule;
         },
       )
-      .map(({ cond, temp }) => (cond ? temp : temp > 100 ? 100 : temp))
-      .hold(80),
+      .hold(0),
   );
 
-  const s_temperatureSensor = s_tick.snapshot(cloop_temp, (_, temp) => {
-    return temp;
-  });
+  const s_temperatureSensor = s_tick.snapshot3(
+    cloop_joule,
+    cloop_amount,
+    (_, joule, amount) => {
+      const temp = joule / 4.2 / amount;
+      if (!Number.isFinite(temp) || Number.isNaN(temp)) {
+        return 0;
+      } else {
+        return temp;
+      }
+    },
+  );
 
   const s_waterLevelSensor: Stream<WaterLevel> = s_tick.snapshot(
     cloop_amount,
