@@ -40,6 +40,6 @@ export const presenter = ({
     c_temperatureLCD: c_temperature.map((temp) => Math.floor(temp).toString()),
     c_timerLCD: c_timer.map((t) => t.toString()),
     c_waterLevelMeter: c_waterLevel,
-    c_isLitLockLamp: c_lock,
+    c_isLitLockLamp: c_lock.map((b) => !b),
   };
 };
