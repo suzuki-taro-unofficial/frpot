@@ -33,7 +33,7 @@ export const simulator = ({
   const actualCapacity = capacity + 200;
   const emitPerSec = 100;
   const pourPerSec = 100;
-  const decJoulePerSec = 1 / 180;
+  const decJoulePerSec = 100;
 
   const c_lid = s_lid.accum<LidState>("Open", (_, state) =>
     state === "Open" ? "Close" : "Open",
