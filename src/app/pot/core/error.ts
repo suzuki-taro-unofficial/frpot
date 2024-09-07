@@ -15,17 +15,18 @@ export const error_temperature_not_increased = ({
   s_lid,
   c_targetTemp,
 }: ErrorTemperatureNotIncreasedInput): Stream<Unit> => {
-  const s_lidIsOpen = s_lid.filter((l) => l === "Open").mapTo(Unit.UNIT);
+  const c_lid = s_lid.hold("Close");
+  const c_lidIsOpen = c_lid.map((s) => s === "Open");
 
   const s_oneMinutesPassed = Time.ms_passed(
     Time.minute_to_ms(1),
     s_tick,
-    s_lidIsOpen,
+    s_tick.gate(c_lidIsOpen).mapTo(Unit.UNIT),
   );
 
   const c_currTemp = s_temperature.hold(0);
   const c_prevTemp = s_oneMinutesPassed
-    .orElse(s_lidIsOpen)
+    .orElse(s_tick.gate(c_lidIsOpen).mapTo(Unit.UNIT))
     .snapshot1(c_currTemp)
     .hold(0);
 
