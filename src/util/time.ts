@@ -30,18 +30,17 @@ export class Time {
   ): Stream<Unit> {
     const cloop_accumTime = new CellLoop<number>();
 
-    const s_updated = s_tick.snapshot(
-      cloop_accumTime,
-      (time, accumTime) => time + accumTime,
-    );
+    const s_updated = s_forceReset
+      .mapTo(0)
+      .orElse(
+        s_tick.snapshot(cloop_accumTime, (time, accumTime) => time + accumTime),
+      );
 
     const s_msPassed = s_updated
       .filter((updated) => updated >= ms)
       .mapTo(Unit.UNIT);
 
-    cloop_accumTime.loop(
-      s_msPassed.orElse(s_forceReset).mapTo(0).orElse(s_updated).hold(0),
-    );
+    cloop_accumTime.loop(s_msPassed.mapTo(0).orElse(s_updated).hold(0));
 
     return s_msPassed;
   }
