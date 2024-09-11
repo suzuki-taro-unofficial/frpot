@@ -6,8 +6,10 @@
 
 ## 概要
 
-simulatorやUIからの入力をcoreに流し込みpotの制御を行う。
+simulatorやUIからの入力をcoreに流し込んでpotの制御を行う。
 また、presenterにpotの出力を流し出力UI用にデータの加工を行う。
+
+出力としてはsimulatorへとループするものと、presenterからの出力UIへのものがある
 
 ## 入力
 
