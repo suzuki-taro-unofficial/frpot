@@ -1,9 +1,363 @@
 <mxfile host="65bd71144e">
     <diagram id="PQn15hy73QnIcp0PRuLB" name="ページ1">
-        <mxGraphModel dx="817" dy="1124" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="1895" dy="847" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
+                <mxCell id="3" value="core" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;" vertex="1" parent="1">
+                    <mxGeometry y="40" width="400" height="480" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="presenter" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;" vertex="1" parent="1">
+                    <mxGeometry x="560" y="200" width="440" height="400" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="119" as="sourcePoint"/>
+                        <mxPoint x="1160" y="120" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="6" value="c_heatterPower" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="5">
+                    <mxGeometry x="0.759" y="-1" relative="1" as="geometry">
+                        <mxPoint x="172" y="-1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="7" value="c_heatterPower" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="310" y="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="159" as="sourcePoint"/>
+                        <mxPoint x="1160" y="159" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="9" value="c_hotWaterSuply" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="8">
+                    <mxGeometry x="0.759" y="-1" relative="1" as="geometry">
+                        <mxPoint x="182" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="10" value="c_hotWaterSuply" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="310" y="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="c_status" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="640" y="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="c_keepWarmMode" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="680" y="280" as="geometry">
+                        <mxPoint x="-15" y="2" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="13" value="c_temperature" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="680" y="290" as="geometry">
+                        <mxPoint x="-24" y="29" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="14" value="c_waterLevel" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="680" y="330" as="geometry">
+                        <mxPoint x="-24" y="29" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="15" value="c_timer" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="660" y="370" as="geometry">
+                        <mxPoint x="-24" y="29" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="16" value="c_lock" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="660" y="410" as="geometry">
+                        <mxPoint x="-24" y="29" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="17" value="c_isLitBoilingLamp" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="840" y="220" width="130" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="c_isLitWarmingLamp" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="830" y="260" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="c_isLitWarmHighLamp" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="820" y="300" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="c_isLitWarmEconomyLamp" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="790" y="340" width="180" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="c_isLitWarmMilkLamp" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="820" y="390" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="c_temperatureLCD" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="840" y="430" width="130" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" value="c_waterLevelMeter" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="830" y="470" width="130" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="c_timerLCD" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="870" y="505" width="100" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="c_isLitLockLamp" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="860" y="545" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" value="c_status" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="330" y="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" value="c_keepWarmMode" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="320" y="280" as="geometry">
+                        <mxPoint x="-15" y="2" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="28" value="c_temperature" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="330" y="290" as="geometry">
+                        <mxPoint x="-24" y="29" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="29" value="c_waterLevel" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="330" y="330" as="geometry">
+                        <mxPoint x="-24" y="29" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="30" value="c_timer" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="350" y="370" as="geometry">
+                        <mxPoint x="-24" y="29" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="31" value="c_lock" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="350" y="410" as="geometry">
+                        <mxPoint x="-24" y="29" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="32" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="239" as="sourcePoint"/>
+                        <mxPoint x="560" y="239" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="34" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="279" as="sourcePoint"/>
+                        <mxPoint x="560" y="279" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="35" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="319.5" as="sourcePoint"/>
+                        <mxPoint x="560" y="319.5" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="36" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="359.5" as="sourcePoint"/>
+                        <mxPoint x="560" y="359.5" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="37" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="399.5" as="sourcePoint"/>
+                        <mxPoint x="560" y="399.5" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="38" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="440" as="sourcePoint"/>
+                        <mxPoint x="560" y="440" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="39" value="c_isLitBoilingLamp" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1200" y="230" width="130" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="40" value="c_isLitWarmingLamp" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1200" y="270" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="41" value="c_isLitWarmHighLamp" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1200" y="310" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="42" value="c_isLitWarmEconomyLamp" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1200" y="347.5" width="180" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="43" value="c_isLitWarmMilkLamp" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1200" y="387.5" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="44" value="c_temperatureLCD" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1200" y="425" width="130" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="45" value="c_waterLevelMeter" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1200" y="465" width="130" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="46" value="c_timerLCD" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1200" y="505" width="100" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="c_isLitLockLamp" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1200" y="545" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="48" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1000" y="240" as="sourcePoint"/>
+                        <mxPoint x="1160" y="240" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="49" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1000" y="280" as="sourcePoint"/>
+                        <mxPoint x="1160" y="280" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="50" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1000" y="320" as="sourcePoint"/>
+                        <mxPoint x="1160" y="320" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="51" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1000" y="360.5" as="sourcePoint"/>
+                        <mxPoint x="1160" y="360.5" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="52" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1000" y="400.5" as="sourcePoint"/>
+                        <mxPoint x="1160" y="400.5" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="53" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1000" y="440.5" as="sourcePoint"/>
+                        <mxPoint x="1160" y="440.5" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="54" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1000" y="481" as="sourcePoint"/>
+                        <mxPoint x="1160" y="481" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="55" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1000" y="520" as="sourcePoint"/>
+                        <mxPoint x="1160" y="520" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="56" value="" style="endArrow=diamond;html=1;endFill=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1000" y="560" as="sourcePoint"/>
+                        <mxPoint x="1160" y="560" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="57" value="s_tick" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="70" y="70" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="58" value="s_temperatureSensor" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="110" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="59" value="s_waterLevelSensor" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="150" width="140" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="60" value="s_waterOverflowSensor" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="190" width="160" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="61" value="s_lidStateSensor" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="230" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="62" value="s_boilButtonClicked" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="270" width="140" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="63" value="s_timerButtonClicked" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="65" y="347.5" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="64" value="s_warmingConfigButtonClicked" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="65" y="385" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="65" value="s_lockButtonClicked" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="65" y="425" width="140" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="66" value="c_hotWaterSupplyButtonPushing" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="65" y="470" width="210" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="68" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="-160" y="80" as="sourcePoint"/>
+                        <mxPoint y="80" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="69" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="-160" y="120" as="sourcePoint"/>
+                        <mxPoint y="120" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="70" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="-160" y="160" as="sourcePoint"/>
+                        <mxPoint y="160" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="71" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="-160" y="200" as="sourcePoint"/>
+                        <mxPoint y="200" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="72" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="-160" y="240" as="sourcePoint"/>
+                        <mxPoint y="240" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="73" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="-160" y="280" as="sourcePoint"/>
+                        <mxPoint y="280" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="74" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="-160" y="399.5" as="sourcePoint"/>
+                        <mxPoint y="399.5" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="75" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="-160" y="360" as="sourcePoint"/>
+                        <mxPoint y="360" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="76" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="-160" y="440" as="sourcePoint"/>
+                        <mxPoint y="440" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="77" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="-160" y="480" as="sourcePoint"/>
+                        <mxPoint y="480" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="80" value="s_tick" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-290" y="70" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="81" value="s_temperatureSensor" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-300" y="110" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="82" value="s_waterLevelSensor" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-300" y="150" width="140" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="83" value="s_waterOverflowSensor" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-300" y="190" width="160" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="84" value="s_lidStateSensor" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-300" y="230" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="85" value="s_boilButtonClicked" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-300" y="270" width="140" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="86" value="s_timerButtonClicked" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-295" y="347.5" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="87" value="s_lockButtonClicked" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-295" y="425" width="140" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="97" value="s_warmingConfigButtonClicked" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-350" y="385" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="98" value="c_hotWaterSupplyButtonPushing" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-370" y="470" width="210" height="40" as="geometry"/>
+                </mxCell>
             </root>
         </mxGraphModel>
     </diagram>
