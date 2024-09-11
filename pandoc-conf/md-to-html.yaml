@@ -5,6 +5,7 @@ input-files:
   # 全体像
   - docs/all.md
   - docs/app.md
+  - docs/pot.md
   - docs/core.md
 
   # ここからpotの説明
